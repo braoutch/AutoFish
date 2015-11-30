@@ -1,21 +1,28 @@
+#include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 #include <OneWire.h> // Inclusion de la librairie OneWire
 #include <Wire.h> 
-
-
-
  
 #define DS18B20 0x28     // Adresse 1-Wire du DS18B20
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 int buzzerPin = 4;
 int ledPin = 8;
-bool buzzerOn = false ;
+int hour = 206;
+int day = 206;
 
 //LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Addr, En, Rw, Rs, d4, d5, d6, d7, backlighpin, polarity
 LiquidCrystal_I2C lcd(0x3F,20,4); 
 //LiquidCrystal_I2C lcd(0x37,20,4); 
 
+RTC_DS1307 RTC; //L'horloge RTC
+
+
+
+
+///////////////////////
+//// TEMPERATURE///////
+//////////////////////
 OneWire ds(BROCHE_ONEWIRE); // Création de l'objet OneWire ds
 
 // Fonction récupérant la température depuis le DS18B20
@@ -57,7 +64,10 @@ boolean getTemperature(float *temp)
   return true;
 }
 
-// the setup routine runs once when you press reset:
+///////////////////////
+//////////SETUP////////
+///////////////////////
+
 void setup() {
   // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
@@ -70,9 +80,12 @@ void setup() {
   lcd.init(); 
   lcd.backlight();
   lcd.setCursor(0, 0);  // (Colonne,ligne)
+
+  //RTC init
+  RTC.begin();
 }
 
-// the loop routine runs over and over again forever:
+
 void loop() 
 {
    float temp;
@@ -97,10 +110,14 @@ void loop()
   digitalWrite(buzzerPin, LOW);
   Serial.println("TEMPERATURE GOOD");
   }
-  
   }
+}
 
-
+void GetTime()
+{
+  DateTime now = RTC.now();
+  hour = now.hour();
+  day = now.day();
 }
 
 
