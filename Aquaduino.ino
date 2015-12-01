@@ -23,8 +23,11 @@ int dayTime = 0;
 int morningTime = 9 ;
 int eveningTime = 19;
 float targetTemp = 25;
+
 boolean ForceMode = false;
 int forceModePushed = 0;
+
+int heatMode = 0;
 
 
 //LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Addr, En, Rw, Rs, d4, d5, d6, d7, backlighpin, polarity
@@ -156,6 +159,7 @@ DateTime now = RTC.now();
       
       Serial.println("TEMPERATURE TOO HIGH");
       digitalWrite(relaiChauffage,LOW);
+      heatMode = 0;
     }
 
     if(temp != 0 && temp < targetTemp - 0.25f)
@@ -163,6 +167,7 @@ DateTime now = RTC.now();
       digitalWrite(buzzerPin, LOW);
       Serial.println("TEMPERATURE GOOD");
       digitalWrite(relaiChauffage,HIGH);
+      heatMode = 1;
     }
   }
     
@@ -223,7 +228,50 @@ DateTime now = RTC.now();
 /////////DISPLAY///////
 ///////////////////////
 
-  
+////////////////////
+///----LIGNE 1----//
+lcd.setCursor(0, 0);  // (Colonne,ligne)
+if (now.day() < 10)
+lcd.print("0");
+lcd.print(now.day());
+lcd.print("/");
+if (now.month() < 10)
+lcd.print("0");
+lcd.print(now.month());
+lcd.print("/");
+lcd.print(now.year());
+lcd.print("  -  ");
+if (now.hour() < 10)
+lcd.print("0");
+lcd.print(now.hour());
+lcd.print("h");
+if (now.minute() < 10)
+lcd.print("0");
+lcd.print(now.minute());
+
+////////////////////
+///----LIGNE 2----//
+ lcd.setCursor(0, 1);  // (Colonne,ligne)
+lcd.print("Eau à ");
+lcd.print(temp);
+lcd.print("°C  HEAT ");
+if(heatMode == 1)
+lcd.print("ON");
+if(heatMode == 0)
+lcd.print("OFF");
+
+////////////////////
+///----LIGNE 3----//
+lcd.setCursor(0, 2);  // (Colonne,ligne)
+
+//////////////////// 
+///----LIGNE 4----//
+lcd.setCursor(0, 3);  // (Colonne,ligne)
+if(!ForceMode)  
+lcd.print("  MODE AUTOMATIQUE  ");
+if(ForceMode)  
+lcd.print("     MODE FORCÉ     ");
+ 
 }
 
 
