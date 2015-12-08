@@ -20,14 +20,25 @@ int relaiBulleur = 16 ;
 int RELAY4 = 10;
 
 int dayTime = 0;
+
+////////////////////////////
+////CARACTÉRISTIQUES////////
 int morningTime = 9 ;
 int eveningTime = 19;
 float targetTemp = 25;
+float deltaTemp = 0.25f;
+float deltaAlert = 0.75f;
+///////////////////////////
+///////////////////////////
 
 boolean ForceMode = false;
 int forceModePushed = 0;
-
 int heatMode = 0;
+int mute = 1;
+
+//alertes
+boolean alertTemp = false;
+boolean alertPH = false;
 
 
 //LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Addr, En, Rw, Rs, d4, d5, d6, d7, backlighpin, polarity
@@ -89,13 +100,13 @@ boolean getTemperature(float *temp)
 void ChangeLight(boolean lightOn)
 {
   if(lightOn){
-  digitalWrite(relaiLumiere, HIGH);
-  digitalWrite(relaiBulleur, HIGH);
+    digitalWrite(relaiLumiere, HIGH);
+    digitalWrite(relaiBulleur, HIGH);
   }
 
   if(!lightOn){
-  digitalWrite(relaiLumiere, LOW);
-  digitalWrite(relaiBulleur, LOW);
+    digitalWrite(relaiLumiere, LOW);
+    digitalWrite(relaiBulleur, LOW);
   }
 }
 
@@ -114,7 +125,7 @@ void setup() {
   pinMode(relaiChauffage,OUTPUT);
   pinMode(relaiBulleur,OUTPUT);
   
-  digitalWrite(ledPin,HIGH);
+  digitalWrite(buzzerPin,LOW);
 
   //Display init
   lcd.init(); 
@@ -131,12 +142,12 @@ void setup() {
 void loop() 
 {
 
-DateTime now = RTC.now();
+  DateTime now = RTC.now();
 
 ///////////////////////
 //// TEMPERATURE///////
 ///////////////////////
- float temp;
+float temp;
   // Lit la température ambiante à ~1Hz
   if(getTemperature(&temp)) {
     // Affiche la température
@@ -146,31 +157,43 @@ DateTime now = RTC.now();
     Serial.write('C');
     Serial.println();
 
-    if(temp != 0 && (temp > targetTemp + 0.75f) || (temp < targetTemp - 0.75f))
+    if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
     {
+      if(!mute)
       digitalWrite(buzzerPin, HIGH);
+      digitalWrite(ledPin,HIGH);
+      alertTemp = true;
+      Serial.print("ALERT ");
+      Serial.println(temp);
     }
-    else
-    digitalWrite(buzzerPin, LOW);
-
-  
-    if(temp != 0 && temp > targetTemp + 0.25f)
-    {
-      
-      Serial.println("TEMPERATURE TOO HIGH");
-      digitalWrite(relaiChauffage,LOW);
-      heatMode = 0;
-    }
-
-    if(temp != 0 && temp < targetTemp - 0.25f)
+    if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
     {
       digitalWrite(buzzerPin, LOW);
-      Serial.println("TEMPERATURE GOOD");
+      digitalWrite(ledPin,LOW);
+      alertTemp = false;
+      Serial.print("ALERT IS OVER");
+    }
+
+
+    if(temp != 0 && ((temp < targetTemp - deltaTemp) || (temp > targetTemp + deltaTemp)))
+    Serial.println("TEMPERATURE TOO BAD");
+
+    else
+    Serial.println("TEMPERATURE GOOD");
+
+    
+    if(temp !=0 && temp <= targetTemp - deltaTemp)
+    {
       digitalWrite(relaiChauffage,HIGH);
       heatMode = 1;
-    }
+    } 
+    else if(temp !=0 && temp >= targetTemp + deltaTemp)
+    {
+      digitalWrite(relaiChauffage,LOW);
+      heatMode = 0;
+    } 
   }
-    
+
 ///////////////////////
 ///////// LIGHT///////
 //////////////////////
@@ -196,33 +219,29 @@ DateTime now = RTC.now();
     }
     if(forceModePinState == HIGH)
     forceModePushed = 0;
-      
+
     
     
     if(!ForceMode)
     {
-    int hour = now.hour();
-    hour = 11;
-    if((hour >= morningTime || hour <= eveningTime) && !dayTime)
-    {
-      dayTime = 1;
-      ChangeLight(dayTime);
-    }
-     if((hour < morningTime || hour > eveningTime) && dayTime)
-    {
-      dayTime = 0;
-      ChangeLight(dayTime);
-    } 
+      int hour = now.hour();
+      hour = 11;
+      if((hour >= morningTime || hour <= eveningTime) && !dayTime)
+      {
+        dayTime = 1;
+        ChangeLight(dayTime);
+      }
+      if((hour < morningTime || hour > eveningTime) && dayTime)
+      {
+        dayTime = 0;
+        ChangeLight(dayTime);
+      } 
     }
     else if(ForceMode)
     if(!dayTime)
     {
       ChangeLight(true); 
     }
-     
-    
-
-    
 
 ///////////////////////
 /////////DISPLAY///////
@@ -252,17 +271,35 @@ lcd.print(now.minute());
 ////////////////////
 ///----LIGNE 2----//
  lcd.setCursor(0, 1);  // (Colonne,ligne)
-lcd.print("Eau à ");
-lcd.print(temp);
-lcd.print("°C  HEAT ");
-if(heatMode == 1)
-lcd.print("ON");
-if(heatMode == 0)
-lcd.print("OFF");
+ lcd.print("Eau à ");
+ lcd.print(temp);
+ lcd.print("°C  HEAT ");
+ if(heatMode == 1)
+ lcd.print("ON");
+ if(heatMode == 0)
+ lcd.print("OFF");
 
 ////////////////////
 ///----LIGNE 3----//
 lcd.setCursor(0, 2);  // (Colonne,ligne)
+if(alertTemp)
+lcd.print("MAUVAISE TEMPÉRATURE");
+else if(alertPH)
+lcd.print("MAUVAIS PH");
+else
+{
+  lcd.print("All Good");
+  
+  if(dayTime == 1){
+    lcd.print(" Night at ");
+    lcd.print(eveningTime);
+  }
+
+  if(dayTime == 0){
+    lcd.print(", Day at ");
+    lcd.print(morningTime);
+  }
+}
 
 //////////////////// 
 ///----LIGNE 4----//
@@ -271,7 +308,7 @@ if(!ForceMode)
 lcd.print("  MODE AUTOMATIQUE  ");
 if(ForceMode)  
 lcd.print("     MODE FORCÉ     ");
- 
+
 }
 
 
