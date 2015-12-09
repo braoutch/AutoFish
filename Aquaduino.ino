@@ -31,6 +31,11 @@ float deltaAlert = 0.75f;
 ///////////////////////////
 ///////////////////////////
 
+//compteurs
+float GoodTempCounter = 0;
+float BadTempCounter = 0;
+int thisMonth;
+
 boolean ForceMode = false;
 int forceModePushed = 0;
 int heatMode = 0;
@@ -136,13 +141,30 @@ void setup() {
 
   //RTC init
   RTC.begin();
+  DateTime initNow = RTC.now();
+  thisMonth = initNow.day();
+  //thisMonth = initNow.month();
+  
 }
 
 
 void loop() 
 {
-
   DateTime now = RTC.now();
+
+/////////////////////////////
+/////////RESET DATE %////////
+/////////EVERY MONTH////////
+/////////////////////////////
+
+if(now.day() == thisMonth + 1 || now.day() - thisMonth > 9)
+//if(now.month() == thisMonth + 1)
+  {
+    thisMonth = now.day() ;
+    GoodTempCounter = 0;
+    BadTempCounter = 0;
+  }
+
 
 ///////////////////////
 //// TEMPERATURE///////
@@ -176,10 +198,16 @@ float temp;
 
 
     if(temp != 0 && ((temp < targetTemp - deltaTemp) || (temp > targetTemp + deltaTemp)))
-    Serial.println("TEMPERATURE TOO BAD");
+    {
+      Serial.println("BAD TEMPERATURE");
+      BadTempCounter ++;
+    }
 
     else
-    Serial.println("TEMPERATURE GOOD");
+    {
+      Serial.println("GOOD TEMPERATURE");
+      GoodTempCounter++;
+    }
 
     
     if(temp !=0 && temp <= targetTemp - deltaTemp)
@@ -219,9 +247,8 @@ float temp;
     }
     if(forceModePinState == HIGH)
     forceModePushed = 0;
+    ///////////////////////
 
-    
-    
     if(!ForceMode)
     {
       int hour = now.hour();
@@ -305,9 +332,12 @@ else
 ///----LIGNE 4----//
 lcd.setCursor(0, 3);  // (Colonne,ligne)
 if(!ForceMode)  
-lcd.print("  MODE AUTOMATIQUE  ");
+lcd.print("MODE AUTO   ");
 if(ForceMode)  
-lcd.print("     MODE FORCÉ     ");
+lcd.print("MODE FORCÉ  ");
+
+lcd.print((GoodTempCounter/(GoodTempCounter + BadTempCounter)),1);
+lcd.print("%");
 
 }
 
