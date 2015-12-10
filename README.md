@@ -1,4 +1,4 @@
-# Aquaduino
+# AutoFish : An arduino for a Fish Tank
 
 Here are AutoFish’s specifications :
 
@@ -12,3 +12,5 @@ Here are AutoFish’s specifications :
 - A 20x4 led display handles the rest.
 
 More coming soon.
+
+More info here : https://braoutch.olympe.in/?page_id=147
