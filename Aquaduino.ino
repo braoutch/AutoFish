@@ -14,6 +14,8 @@ int forceModePin = 9;
 int forceModePinState = 0;
 int foodModePin = 6;
 int foodModePinState = 0;
+boolean feeding = false;     //Pour savoir si la bouffe est en cours de distribution
+long feedingInitTime = 0;
 
 //relais
 int relaiLumiere = 15;      //La lumière                   
@@ -155,10 +157,46 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
+///La date qui sert partout
   DateTime now = RTC.now();
 
+///////////////////////
+//// ----FOOD---///////
+///////////////////////
+  foodModePinState = digitalRead(foodModePin);
+
+  if(!feeding && foodModePinState == LOW)
+  {
+    feeding = true;
+    feedingInitTime = now.minute();
+    digitalWrite(relaiPompe,LOW);
+  }
+
+if(feeding)
+{
+    if(feedingInitTime < 55)
+    { 
+       if(now.minute() >= feedingInitTime+5)
+       {
+          feeding = false;
+          digitalWrite(relaiPompe,HIGH);
+       }
+   }
+   
+  if(feedingInitTime >=55)
+    { 
+       if(now.minute()+60 >= feedingInitTime+5)
+       {
+          feeding = false;
+          digitalWrite(relaiPompe,HIGH);
+       }
+   }
+    
+}
+  
+  
 /////////////////////////////
-/////////RESET DATE %////////
+/////////RESET Mean date %////////
 /////////EVERY MONTH////////
 /////////////////////////////
 
@@ -223,7 +261,7 @@ float temp;
     else if(temp !=0 && temp >= targetTemp + deltaTemp)
     {
       digitalWrite(relaiChauffage,LOW);
-      heatMode = 0;
+      heatMode = 0;                                         
     } 
   }
 
