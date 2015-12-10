@@ -12,12 +12,14 @@ int buzzerPin = 4;
 int ledPin = 8;
 int forceModePin = 9;
 int forceModePinState = 0;
+int foodModePin = 6;
+int foodModePinState = 0;
 
 //relais
 int relaiLumiere = 15;      //La lumière                   
 int relaiChauffage = 14;                       
 int relaiBulleur = 16 ;                      
-int RELAY4 = 10;
+int relaiPompe = 10;
 
 int dayTime = 0;
 
@@ -36,6 +38,7 @@ float GoodTempCounter = 0;
 float BadTempCounter = 0;
 int thisMonth;
 
+
 boolean ForceMode = false;
 int forceModePushed = 0;
 int heatMode = 0;
@@ -45,15 +48,13 @@ int mute = 1;
 boolean alertTemp = false;
 boolean alertPH = false;
 
-
+//Écran
 //LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Addr, En, Rw, Rs, d4, d5, d6, d7, backlighpin, polarity
 LiquidCrystal_I2C lcd(0x3F,20,4); 
 //LiquidCrystal_I2C lcd(0x37,20,4); 
 
+//Horloge
 RTC_DS1307 RTC; //L'horloge RTC
-
-
-
 
 ///////////////////////
 //// TEMPERATURE///////
@@ -126,11 +127,14 @@ void setup() {
   pinMode(buzzerPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(forceModePin, INPUT_PULLUP);
+  pinMode(foodModePin, INPUT_PULLUP);
   pinMode(relaiLumiere,OUTPUT);
   pinMode(relaiChauffage,OUTPUT);
   pinMode(relaiBulleur,OUTPUT);
+  pinMode(relaiPompe,OUTPUT);
   
   digitalWrite(buzzerPin,LOW);
+  digitalWrite(relaiPompe,HIGH);
 
   //Display init
   lcd.init(); 
@@ -146,8 +150,9 @@ void setup() {
   //thisMonth = initNow.month();
   
 }
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////LOOP////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
   DateTime now = RTC.now();
@@ -230,23 +235,19 @@ float temp;
     forceModePinState = digitalRead(forceModePin);
     Serial.println(forceModePinState);
     
-    if(forceModePinState == LOW && ForceMode && forceModePushed == 0)
+    if(forceModePinState == LOW && !ForceMode)
     {
-      forceModePushed = 1;
-      ForceMode = false;
+      ForceMode = true;
       Serial.println("Enable Forced Mode");
       if(!dayTime)
       ChangeLight(dayTime);      
     }
     
-    if(forceModePinState == LOW && !ForceMode && forceModePushed == 0)
+    if(forceModePinState == HIGH && ForceMode)
     {
-      forceModePushed = 1;
-      ForceMode = true;
+      ForceMode = false;
       Serial.print("Disable Forced Mode");
     }
-    if(forceModePinState == HIGH)
-    forceModePushed = 0;
     ///////////////////////
 
     if(!ForceMode)
@@ -264,10 +265,12 @@ float temp;
         ChangeLight(dayTime);
       } 
     }
+    
     else if(ForceMode)
     if(!dayTime)
     {
       ChangeLight(true); 
+      dayTime = 1;
     }
 
 ///////////////////////
