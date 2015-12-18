@@ -125,6 +125,7 @@ void ChangeLight(boolean lightOn)
 void setup() {
   // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
+  
   // make the pushbutton's pin an input:
   pinMode(buzzerPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
@@ -147,9 +148,11 @@ void setup() {
 
   //RTC init
   RTC.begin();
+  RTC.adjust(DateTime(__DATE__, __TIME__));
   DateTime initNow = RTC.now();
   thisMonth = initNow.day();
   //thisMonth = initNow.month();
+  Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
   
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,43 +161,43 @@ void setup() {
 void loop() 
 {
 ///La date qui sert partout
-  DateTime now = RTC.now();
-
+DateTime now = RTC.now();
+Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
 ///////////////////////
 //// ----FOOD---///////
 ///////////////////////
-  foodModePinState = digitalRead(foodModePin);
+foodModePinState = digitalRead(foodModePin);
 
-  if(!feeding && foodModePinState == LOW)
-  {
-    feeding = true;
-    feedingInitTime = now.minute();
-    digitalWrite(relaiPompe,LOW);
-  }
+if(!feeding && foodModePinState == LOW)
+{
+  feeding = true;
+  feedingInitTime = now.minute();
+  digitalWrite(relaiPompe,LOW);
+}
 
 if(feeding)
 {
-    if(feedingInitTime < 55)
-    { 
-       if(now.minute() >= feedingInitTime+5)
-       {
-          feeding = false;
-          digitalWrite(relaiPompe,HIGH);
-       }
-   }
-   
-  if(feedingInitTime >=55)
-    { 
-       if(now.minute()+60 >= feedingInitTime+5)
-       {
-          feeding = false;
-          digitalWrite(relaiPompe,HIGH);
-       }
-   }
-    
+  if(feedingInitTime < 55)
+  { 
+   if(now.minute() >= feedingInitTime+5)
+   {
+    feeding = false;
+    digitalWrite(relaiPompe,HIGH);
+  }
 }
-  
-  
+
+if(feedingInitTime >=55)
+{ 
+ if(now.minute()+60 >= feedingInitTime+5)
+ {
+  feeding = false;
+  digitalWrite(relaiPompe,HIGH);
+}
+}
+
+}
+
+
 /////////////////////////////
 /////////RESET Mean date %////////
 /////////EVERY MONTH////////
@@ -202,11 +205,11 @@ if(feeding)
 
 if(now.day() == thisMonth + 1 || now.day() - thisMonth > 9)
 //if(now.month() == thisMonth + 1)
-  {
-    thisMonth = now.day() ;
-    GoodTempCounter = 0;
-    BadTempCounter = 0;
-  }
+{
+  thisMonth = now.day() ;
+  GoodTempCounter = 0;
+  BadTempCounter = 0;
+}
 
 
 ///////////////////////
@@ -221,6 +224,7 @@ float temp;
     Serial.write(176); // caractère °
     Serial.write('C');
     Serial.println();
+    
 
     if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
     {
