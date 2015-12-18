@@ -9,7 +9,11 @@
 
 //Pins
 int buzzerPin = 4;
-int ledPin = 8;
+
+int blueLedPin = 18;
+int greenLedPin = 19;
+int redLedPin = 20;
+
 int forceModePin = 9;
 int forceModePinState = 0;
 int foodModePin = 6;
@@ -128,7 +132,8 @@ void setup() {
   
   // make the pushbutton's pin an input:
   pinMode(buzzerPin, OUTPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(blueLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
   pinMode(relaiLumiere,OUTPUT);
