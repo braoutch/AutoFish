@@ -134,6 +134,7 @@ void setup() {
   pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
+  pinMode(blueLedPin, OUTPUT);
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
   pinMode(relaiLumiere,OUTPUT);
@@ -235,7 +236,7 @@ float temp;
     {
       if(!mute)
       digitalWrite(buzzerPin, HIGH);
-      digitalWrite(ledPin,HIGH);
+      digitalWrite(redLedPin,HIGH);
       alertTemp = true;
       Serial.print("ALERT ");
       Serial.println(temp);
@@ -243,7 +244,7 @@ float temp;
     if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
     {
       digitalWrite(buzzerPin, LOW);
-      digitalWrite(ledPin,LOW);
+      digitalWrite(redLedPin,LOW);
       alertTemp = false;
       Serial.print("ALERT IS OVER");
     }
@@ -253,12 +254,18 @@ float temp;
     {
       Serial.println("BAD TEMPERATURE");
       BadTempCounter ++;
+      digitalWrite(blueLedPin, HIGH);
+      digitalWrite(greenLedPin, LOW);
+      if(alertTemp)
+      BadTempCounter++;
     }
 
     else
     {
       Serial.println("GOOD TEMPERATURE");
       GoodTempCounter++;
+      digitalWrite(blueLedPin, LOW);
+      digitalWrite(greenLedPin, HIGH);
     }
 
     
