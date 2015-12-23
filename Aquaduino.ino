@@ -1,4 +1,4 @@
-
+#include "pitches.h"
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 #include <OneWire.h> // Inclusion de la librairie OneWire
@@ -62,6 +62,14 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 //Horloge
 RTC_DS1307 RTC; //L'horloge RTC
 
+//Réveil et sons
+int melody[] = {
+  NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
+};
+int noteDurations[] = {
+  6, 6, 6, 3
+};
+
 ///////////////////////
 //// TEMPERATURE///////
 //////////////////////
@@ -122,15 +130,52 @@ void ChangeLight(boolean lightOn)
   }
 }
 
+////////////////////
+/////////MUSIC//////
+////////////////////
+void PlayMusic(int musicNumber){
+  switch (musicNumber) {
+    case 1 :
+      for (int thisNote = 0; thisNote < 4; thisNote++) {
+
+    // to calculate the note duration, take one second
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 2000 / noteDurations[thisNote];
+    tone(buzzerPin, melody[thisNote], noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(buzzerPin);
+  }
+  break;
+  case 2:
+    for (int thisNote = 0; thisNote < 4; thisNote++) {
+
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 2000 / noteDurations[thisNote];
+    tone(buzzerPin, melody[thisNote], noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(buzzerPin);
+  }
+  break;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////SETUP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
   
-  // make the pushbutton's pin an input:
   pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
@@ -156,7 +201,7 @@ void setup() {
   lcd.print("AUTOFISH");
   lcd.setCursor(4, 2);
   lcd.print("says Hello");
-  delay(1500);
+  PlayMusic(1);
   
 
   //RTC init
