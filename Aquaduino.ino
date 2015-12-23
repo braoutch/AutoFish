@@ -32,11 +32,13 @@ int dayTime = 0;
 
 ////////////////////////////
 ////CARACTÉRISTIQUES////////
-int morningTime = 9 ;
-int eveningTime = 17;
+int morningTime = 11; //inclus
+int eveningTime = 20;   //inclus
 float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
+
+int horaireReveil[] = {6,45};
 ///////////////////////////
 ///////////////////////////
 
@@ -66,9 +68,23 @@ RTC_DS1307 RTC; //L'horloge RTC
 int melody[] = {
   NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
 };
+int reveil[] = {
+  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
+  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4,
+  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
+  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
+};
 int noteDurations[] = {
   6, 6, 6, 3
 };
+int reveilDurations[] = {
+  12,12,12,12,6,6,12,12,12,12,6,6,
+  12,12,12,12,12,12,6,12,12,12,12,12,12,6,
+  12,12,12,12,6,6,12,12,12,12,6,6,
+  12,12,12,12,6,12,12,12,12,12,12,6,6, 1.5
+  };
+
+int reveilDone = 0;
 
 ///////////////////////
 //// TEMPERATURE///////
@@ -136,7 +152,7 @@ void ChangeLight(boolean lightOn)
 void PlayMusic(int musicNumber){
   switch (musicNumber) {
     case 1 :
-      for (int thisNote = 0; thisNote < 4; thisNote++) {
+      for (int thisNote = 0; thisNote<4 ; thisNote++) {
 
     // to calculate the note duration, take one second
     // divided by the note type.
@@ -153,15 +169,15 @@ void PlayMusic(int musicNumber){
   }
   break;
   case 2:
-    for (int thisNote = 0; thisNote < 4; thisNote++) {
+    for (int thisNote = 0; thisNote < 52; thisNote++) {
 
     //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 2000 / noteDurations[thisNote];
-    tone(buzzerPin, melody[thisNote], noteDuration);
+    int reveilDuration = 2000 / reveilDurations[thisNote];
+    tone(buzzerPin, reveil[thisNote], reveilDuration);
 
     // to distinguish the notes, set a minimum time between them.
     // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
+    int pauseBetweenNotes = reveilDuration * 1.30;
     delay(pauseBetweenNotes);
     // stop the tone playing:
     noTone(buzzerPin);
@@ -202,7 +218,6 @@ void setup() {
   lcd.setCursor(4, 2);
   lcd.print("says Hello");
   PlayMusic(1);
-  
 
   //RTC init
   RTC.begin();
@@ -223,6 +238,18 @@ void loop()
     
 ///La date qui sert partout
 DateTime now = RTC.now();
+////////////////////////
+//// ----Réveil---///////
+////////////////////////
+
+if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1] && reveilDone == 0){
+  PlayMusic(2);
+  reveilDone = 1;
+}
+if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
+reveilDone = 0;
+
+
 Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
 ///////////////////////
 //// ----FOOD---///////
