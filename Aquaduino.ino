@@ -1,3 +1,4 @@
+
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 #include <OneWire.h> // Inclusion de la librairie OneWire
@@ -32,7 +33,7 @@ int dayTime = 0;
 ////////////////////////////
 ////CARACTÉRISTIQUES////////
 int morningTime = 9 ;
-int eveningTime = 19;
+int eveningTime = 17;
 float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
@@ -43,6 +44,7 @@ float deltaAlert = 0.75f;
 float GoodTempCounter = 0;
 float BadTempCounter = 0;
 int thisMonth;
+float lastTemp = 0;
 
 
 boolean ForceMode = false;
@@ -55,9 +57,7 @@ boolean alertTemp = false;
 boolean alertPH = false;
 
 //Écran
-//LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Addr, En, Rw, Rs, d4, d5, d6, d7, backlighpin, polarity
-LiquidCrystal_I2C lcd(0x3F,20,4); 
-//LiquidCrystal_I2C lcd(0x37,20,4); 
+LiquidCrystal_I2C lcd(0x27,20,4); 
 
 //Horloge
 RTC_DS1307 RTC; //L'horloge RTC
@@ -134,7 +134,7 @@ void setup() {
   pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
-  pinMode(blueLedPin, OUTPUT);
+  pinMode(redLedPin, OUTPUT);
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
   pinMode(relaiLumiere,OUTPUT);
@@ -145,12 +145,19 @@ void setup() {
   digitalWrite(buzzerPin,LOW);
   digitalWrite(relaiPompe,HIGH);
 
+  analogWrite(redLedPin,255);
+  analogWrite(blueLedPin,255);
+  analogWrite(greenLedPin,255);
+  
   //Display init
   lcd.init(); 
   lcd.backlight();
-  lcd.setCursor(0, 0);  // (Colonne,ligne)
-  lcd.print("Démarrage du module Aquaduino...");
-  delay(500);
+  lcd.setCursor(5, 1);  // (Colonne,ligne)
+  lcd.print("AUTOFISH");
+  lcd.setCursor(4, 2);
+  lcd.print("says Hello");
+  delay(1500);
+  
 
   //RTC init
   RTC.begin();
@@ -159,13 +166,16 @@ void setup() {
   thisMonth = initNow.day();
   //thisMonth = initNow.month();
   Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
-  
+  lcd.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////LOOP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
+  if (! RTC.isrunning()) 
+    Serial.println("RTC is NOT running!");
+    
 ///La date qui sert partout
 DateTime now = RTC.now();
 Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
@@ -225,6 +235,7 @@ float temp;
   // Lit la température ambiante à ~1Hz
   if(getTemperature(&temp)) {
     // Affiche la température
+    lastTemp = temp;
     Serial.print("Temperature : ");
     Serial.print(temp);
     Serial.write(176); // caractère °
@@ -236,7 +247,8 @@ float temp;
     {
       if(!mute)
       digitalWrite(buzzerPin, HIGH);
-      digitalWrite(redLedPin,HIGH);
+      analogWrite(redLedPin,100);
+      analogWrite(blueLedPin, 255);
       alertTemp = true;
       Serial.print("ALERT ");
       Serial.println(temp);
@@ -244,7 +256,7 @@ float temp;
     if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
     {
       digitalWrite(buzzerPin, LOW);
-      digitalWrite(redLedPin,LOW);
+      analogWrite(redLedPin,255);
       alertTemp = false;
       Serial.print("ALERT IS OVER");
     }
@@ -254,8 +266,12 @@ float temp;
     {
       Serial.println("BAD TEMPERATURE");
       BadTempCounter ++;
-      digitalWrite(blueLedPin, HIGH);
-      digitalWrite(greenLedPin, LOW);
+      if(!alertTemp)
+      {
+      analogWrite(blueLedPin, 100);
+      analogWrite(greenLedPin, 255);
+      analogWrite(redLedPin,255);
+      }
       if(alertTemp)
       BadTempCounter++;
     }
@@ -264,11 +280,14 @@ float temp;
     {
       Serial.println("GOOD TEMPERATURE");
       GoodTempCounter++;
-      digitalWrite(blueLedPin, LOW);
-      digitalWrite(greenLedPin, HIGH);
+      analogWrite(blueLedPin, 255);
+      analogWrite(greenLedPin, 100);
+      analogWrite(redLedPin,255);
     }
 
-    
+
+
+    //Finalement on gère le relai
     if(temp !=0 && temp <= targetTemp - deltaTemp)
     {
       digitalWrite(relaiChauffage,HIGH);
@@ -307,7 +326,6 @@ float temp;
     if(!ForceMode)
     {
       int hour = now.hour();
-      hour = 11;
       if((hour >= morningTime || hour <= eveningTime) && !dayTime)
       {
         dayTime = 1;
@@ -355,33 +373,33 @@ lcd.print(now.minute());
 ////////////////////
 ///----LIGNE 2----//
  lcd.setCursor(0, 1);  // (Colonne,ligne)
- lcd.print("Eau à ");
- lcd.print(temp);
- lcd.print("°C  HEAT ");
+ lcd.print("Eau a ");
+ lcd.print(lastTemp);
+ lcd.print(" degres ");
  if(heatMode == 1)
- lcd.print("ON");
+ lcd.print("H");
  if(heatMode == 0)
- lcd.print("OFF");
+ lcd.print("C");
 
 ////////////////////
 ///----LIGNE 3----//
 lcd.setCursor(0, 2);  // (Colonne,ligne)
+
 if(alertTemp)
-lcd.print("MAUVAISE TEMPÉRATURE");
-else if(alertPH)
-lcd.print("MAUVAIS PH");
+lcd.print("Alerte ! ");
+
 else
 {
-  lcd.print("All Good");
-  
-  if(dayTime == 1){
-    lcd.print(" Night at ");
+  if(dayTime == 1 && !ForceMode){
+    lcd.print("Daytime, night at ");
     lcd.print(eveningTime);
+    lcd.print("");
   }
 
-  if(dayTime == 0){
-    lcd.print(", Day at ");
+  else {
+    lcd.print("Night,   day at ");
     lcd.print(morningTime);
+    lcd.print("   ");
   }
 }
 
@@ -391,7 +409,7 @@ lcd.setCursor(0, 3);  // (Colonne,ligne)
 if(!ForceMode)  
 lcd.print("MODE AUTO   ");
 if(ForceMode)  
-lcd.print("MODE FORCÉ  ");
+lcd.print("MODE FORCE  ");
 
 lcd.print((GoodTempCounter/(GoodTempCounter + BadTempCounter)),1);
 lcd.print("%");
