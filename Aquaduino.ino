@@ -16,6 +16,7 @@ String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
 int lastSending = -1;
+int sendFrequency = 1;
 
 //Pins
 int buzzerPin = 4;
@@ -331,7 +332,7 @@ float temp;
 
     //SendToWifi
 
-    if(now.minute() - lastSending >= 1){
+    if(now.minute() - lastSending >= sendFrequency){
     SendToWifi(String(lastTemp));
     lastSending = now.minute();
     }
