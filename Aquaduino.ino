@@ -1,4 +1,5 @@
 //THIS IS A TEST
+
 #include "pitches.h"
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
@@ -8,6 +9,13 @@
 #define DS18B20 0x28     // Adresse 1-Wire du DS18B20
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
+//wifi
+String NomduReseauWifi = "Entrez le nom de votre Box ou point d'accès Wifi"; // Garder les guillements
+String MotDePasse      = "Entrez le nom du mot de passe de votre Box ou point d'accès Wifi"; // Garder les guillements
+String ApiKey          = "YCBS447TES9C1OTU";
+#define IP "184.106.153.149" // thingspeak.com
+String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
+int lastSending = -1;
 
 //Pins
 int buzzerPin = 4;
@@ -192,6 +200,10 @@ void PlayMusic(int musicNumber){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.begin(9600);
+
+  //wifi
+  Serial1.begin(9600);  
+  initESP8266();
   
   pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -316,7 +328,13 @@ float temp;
     Serial.write(176); // caractère °
     Serial.write('C');
     Serial.println();
-    
+
+    //SendToWifi
+
+    if(now.minute() - lastSending >= 1){
+    SendToWifi(String(lastTemp));
+    lastSending = now.minute();
+    }
 
     if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
     {
@@ -491,7 +509,85 @@ lcd.print("%");
 
 }
 
+/****************************************************************/
+/*                Fonction qui initialise l'ESP8266             */
+/****************************************************************/
+void initESP8266()
+{  
+  Serial.println("**********************************************************");  
+  Serial.println("**************** DEBUT DE L'INITIALISATION ***************");
+  Serial.println("**********************************************************");  
+  envoieAuESP8266("AT+RST");
+  recoitDuESP8266(2000);
+  Serial.println("**********************************************************");
+  envoieAuESP8266("AT+CWMODE=3");
+  recoitDuESP8266(5000);
+  Serial.println("**********************************************************");
+  envoieAuESP8266("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+  recoitDuESP8266(10000);
+  Serial.println("**********************************************************");
+  //envoieAuESP8266("AT+CIFSR");
+  //recoitDuESP8266(1000);
+  Serial.println("**********************************************************");
+  //envoieAuESP8266("AT+CIPMUX=1");   
+  //recoitDuESP8266(1000);
+  Serial.println("**********************************************************");
+  //envoieAuESP8266("AT+CIPSERVER=1,80");
+  //recoitDuESP8266(1000);
+  Serial.println("**********************************************************");
+  Serial.println("***************** INITIALISATION TERMINEE ****************");
+  Serial.println("**********************************************************");
+  Serial.println("");  
+}
 
+/****************************************************************/
+/*        Fonction qui envoie une commande à l'ESP8266          */
+/****************************************************************/
+void envoieAuESP8266(String commande)
+{  
+  Serial1.println(commande);
+}
+/****************************************************************/
+/*Fonction qui lit et affiche les messages envoyés par l'ESP8266*/
+/****************************************************************/
+void recoitDuESP8266(const int timeout)
+{
+  String reponse = "";
+  long int time = millis();
+  while( (time+timeout) > millis())
+  {
+    while(Serial1.available())
+    {
+      char c = Serial1.read();
+      reponse+=c;
+    }
+  }
+  Serial.print(reponse);   
+}
+
+/******************************************/
+/*ENVOYER A THINGSPEAK*********************/
+/******************************************/
+void SendToWifi(String tenmpF){
+  String cmd = "AT+CIPSTART=\"TCP\",\"";
+  cmd += IP;
+  cmd += "\",80";
+  Serial.println(cmd);
+  delay(2000);
+  if(Serial.find("Error")){
+    return;
+  }
+  cmd = GET;
+  cmd += tenmpF;
+  cmd += "\r\n";
+  Serial.print("AT+CIPSEND=");
+  Serial.println(cmd.length());
+  if(Serial.find(">")){
+    Serial.print(cmd);
+  }else{
+    Serial.println("AT+CIPCLOSE");
+  }
+}
 
 
 
