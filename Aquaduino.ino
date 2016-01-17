@@ -1,3 +1,4 @@
+//THIS IS A TEST
 #include "pitches.h"
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
@@ -214,10 +215,12 @@ void setup() {
   lcd.init(); 
   lcd.backlight();
   lcd.setCursor(5, 1);  // (Colonne,ligne)
+  Serial.print("Displaying introduction...");
   lcd.print("AUTOFISH");
   lcd.setCursor(4, 2);
   lcd.print("says Hello");
   PlayMusic(1);
+  Serial.print("End of introduction...");
 
   //RTC init
   RTC.begin();
