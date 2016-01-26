@@ -49,7 +49,7 @@ float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
-int horaireReveil[] = {6,45};
+int horaireReveil[] = {15,0};
 ///////////////////////////
 ///////////////////////////
 
@@ -201,7 +201,7 @@ break;
 //////////SETUP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-<<<<<<< HEAD
+
   Serial.begin(9600);
 
   //wifi
@@ -225,29 +225,7 @@ void setup() {
   analogWrite(redLedPin,255);
   analogWrite(blueLedPin,255);
   analogWrite(greenLedPin,255);
-  
-=======
-	Serial.begin(9600);
 
-	pinMode(buzzerPin, OUTPUT);
-	pinMode(blueLedPin, OUTPUT);
-	pinMode(greenLedPin, OUTPUT);
-	pinMode(redLedPin, OUTPUT);
-	pinMode(forceModePin, INPUT_PULLUP);
-	pinMode(foodModePin, INPUT_PULLUP);
-	pinMode(relaiLumiere,OUTPUT);
-	pinMode(relaiChauffage,OUTPUT);
-	pinMode(relaiBulleur,OUTPUT);
-	pinMode(relaiPompe,OUTPUT);
-
-	digitalWrite(buzzerPin,LOW);
-	digitalWrite(relaiPompe,HIGH);
-
-	analogWrite(redLedPin,255);
-	analogWrite(blueLedPin,255);
-	analogWrite(greenLedPin,255);
-
->>>>>>> master
   //Display init
   lcd.init(); 
   lcd.backlight();
