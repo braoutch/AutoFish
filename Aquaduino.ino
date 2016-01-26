@@ -11,6 +11,7 @@
 
 //Pins
 int buzzerPin = 4;
+float ledIntensite = 0.6f;	//Valeur de 0.4 à 1 (1 = fort, 0.4 = éteint) 
 
 int blueLedPin = 18;
 int greenLedPin = 19;
@@ -67,23 +68,23 @@ RTC_DS1307 RTC; //L'horloge RTC
 
 //Réveil et sons
 int melody[] = {
-  NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
+	NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
 };
 int reveil[] = {
-  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
-  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4,
-  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
-  NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
+	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
+	NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4,
+	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
+	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
 };
 int noteDurations[] = {
-  6, 6, 6, 3
+	6, 6, 6, 3
 };
 int reveilDurations[] = {
-  12,12,12,12,6,6,12,12,12,12,6,6,
-  12,12,12,12,12,12,6,12,12,12,12,12,12,6,
-  12,12,12,12,6,6,12,12,12,12,6,6,
-  12,12,12,12,6,12,12,12,12,12,12,6,6, 1.5
-  };
+	12,12,12,12,6,6,12,12,12,12,6,6,
+	12,12,12,12,12,12,6,12,12,12,12,12,12,6,
+	12,12,12,12,6,6,12,12,12,12,6,6,
+	12,12,12,12,6,12,12,12,12,12,12,6,6, 1.5
+};
 
 int reveilDone = 0;
 
@@ -96,14 +97,14 @@ OneWire ds(BROCHE_ONEWIRE); // Création de l'objet OneWire ds
 // Retourne true si tout va bien, ou false en cas d'erreur
 boolean getTemperature(float *temp)
 {
-  byte data[9], addr[8];
+	byte data[9], addr[8];
   // data : Données lues depuis le scratchpad
   // addr : adresse du module 1-Wire détecté
 
   if (!ds.search(addr)) { // Recherche un module 1-Wire
     ds.reset_search();    // Réinitialise la recherche de module
     return false;         // Retourne une erreur
-  }
+}
 
    if (OneWire::crc8(addr, 7) != addr[7]) // Vérifie que l'adresse a été correctement reçue
     return false;                        // Si le message est corrompu on retourne une erreur
@@ -136,24 +137,24 @@ boolean getTemperature(float *temp)
 ///////////////////////
 void ChangeLight(boolean lightOn)
 {
-  if(lightOn){
-    digitalWrite(relaiLumiere, HIGH);
-    digitalWrite(relaiBulleur, HIGH);
-  }
+	if(lightOn){
+		digitalWrite(relaiLumiere, HIGH);
+		digitalWrite(relaiBulleur, HIGH);
+	}
 
-  if(!lightOn){
-    digitalWrite(relaiLumiere, LOW);
-    digitalWrite(relaiBulleur, LOW);
-  }
+	if(!lightOn){
+		digitalWrite(relaiLumiere, LOW);
+		digitalWrite(relaiBulleur, LOW);
+	}
 }
 
 ////////////////////
 /////////MUSIC//////
 ////////////////////
 void PlayMusic(int musicNumber){
-  switch (musicNumber) {
-    case 1 :
-      for (int thisNote = 0; thisNote<4 ; thisNote++) {
+	switch (musicNumber) {
+		case 1 :
+		for (int thisNote = 0; thisNote<4 ; thisNote++) {
 
     // to calculate the note duration, take one second
     // divided by the note type.
@@ -167,10 +168,10 @@ void PlayMusic(int musicNumber){
     delay(pauseBetweenNotes);
     // stop the tone playing:
     noTone(buzzerPin);
-  }
-  break;
-  case 2:
-    for (int thisNote = 0; thisNote < 52; thisNote++) {
+}
+break;
+case 2:
+for (int thisNote = 0; thisNote < 52; thisNote++) {
 
     //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
     int reveilDuration = 2000 / reveilDurations[thisNote];
@@ -182,35 +183,35 @@ void PlayMusic(int musicNumber){
     delay(pauseBetweenNotes);
     // stop the tone playing:
     noTone(buzzerPin);
-  }
-  break;
-  }
+}
+break;
+}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////SETUP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  Serial.begin(9600);
-  
-  pinMode(buzzerPin, OUTPUT);
-  pinMode(blueLedPin, OUTPUT);
-  pinMode(greenLedPin, OUTPUT);
-  pinMode(redLedPin, OUTPUT);
-  pinMode(forceModePin, INPUT_PULLUP);
-  pinMode(foodModePin, INPUT_PULLUP);
-  pinMode(relaiLumiere,OUTPUT);
-  pinMode(relaiChauffage,OUTPUT);
-  pinMode(relaiBulleur,OUTPUT);
-  pinMode(relaiPompe,OUTPUT);
-  
-  digitalWrite(buzzerPin,LOW);
-  digitalWrite(relaiPompe,HIGH);
+	Serial.begin(9600);
 
-  analogWrite(redLedPin,255);
-  analogWrite(blueLedPin,255);
-  analogWrite(greenLedPin,255);
-  
+	pinMode(buzzerPin, OUTPUT);
+	pinMode(blueLedPin, OUTPUT);
+	pinMode(greenLedPin, OUTPUT);
+	pinMode(redLedPin, OUTPUT);
+	pinMode(forceModePin, INPUT_PULLUP);
+	pinMode(foodModePin, INPUT_PULLUP);
+	pinMode(relaiLumiere,OUTPUT);
+	pinMode(relaiChauffage,OUTPUT);
+	pinMode(relaiBulleur,OUTPUT);
+	pinMode(relaiPompe,OUTPUT);
+
+	digitalWrite(buzzerPin,LOW);
+	digitalWrite(relaiPompe,HIGH);
+
+	analogWrite(redLedPin,255);
+	analogWrite(blueLedPin,255);
+	analogWrite(greenLedPin,255);
+
   //Display init
   lcd.init(); 
   lcd.backlight();
@@ -236,9 +237,9 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
-  if (! RTC.isrunning()) 
-    Serial.println("RTC is NOT running!");
-    
+	if (! RTC.isrunning()) 
+	Serial.println("RTC is NOT running!");
+
 ///La date qui sert partout
 DateTime now = RTC.now();
 ////////////////////////
@@ -246,8 +247,8 @@ DateTime now = RTC.now();
 ////////////////////////
 
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1] && reveilDone == 0){
-  PlayMusic(2);
-  reveilDone = 1;
+	PlayMusic(2);
+	reveilDone = 1;
 }
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
 reveilDone = 0;
@@ -261,30 +262,30 @@ foodModePinState = digitalRead(foodModePin);
 
 if(!feeding && foodModePinState == LOW)
 {
-  feeding = true;
-  feedingInitTime = now.minute();
-  digitalWrite(relaiPompe,LOW);
+	feeding = true;
+	feedingInitTime = now.minute();
+	digitalWrite(relaiPompe,LOW);
 }
 
 if(feeding)
 {
-  if(feedingInitTime < 55)
-  { 
-   if(now.minute() >= feedingInitTime+5)
-   {
-    feeding = false;
-    digitalWrite(relaiPompe,HIGH);
-  }
-}
+	if(feedingInitTime < 55)
+	{ 
+		if(now.minute() >= feedingInitTime+5)
+		{
+			feeding = false;
+			digitalWrite(relaiPompe,HIGH);
+		}
+	}
 
-if(feedingInitTime >=55)
-{ 
- if(now.minute()+60 >= feedingInitTime+5)
- {
-  feeding = false;
-  digitalWrite(relaiPompe,HIGH);
-}
-}
+	if(feedingInitTime >=55)
+	{ 
+		if(now.minute()+60 >= feedingInitTime+5)
+		{
+			feeding = false;
+			digitalWrite(relaiPompe,HIGH);
+		}
+	}
 
 }
 
@@ -297,9 +298,9 @@ if(feedingInitTime >=55)
 if(now.day() == thisMonth + 1 || now.day() - thisMonth > 9)
 //if(now.month() == thisMonth + 1)
 {
-  thisMonth = now.day() ;
-  GoodTempCounter = 0;
-  BadTempCounter = 0;
+	thisMonth = now.day() ;
+	GoodTempCounter = 0;
+	BadTempCounter = 0;
 }
 
 
@@ -307,12 +308,12 @@ if(now.day() == thisMonth + 1 || now.day() - thisMonth > 9)
 //// TEMPERATURE///////
 ///////////////////////
 float temp;
-  // Lit la température ambiante à ~1Hz
-  if(getTemperature(&temp)) {
-    // Affiche la température
-    lastTemp = temp;
-    Serial.print("Temperature : ");
-    Serial.print(temp);
+
+if(getTemperature(&temp)) {	    // Affiche la température  // Lit la température ambiante à ~1Hz
+	
+	lastTemp = temp;
+	Serial.print("Temperature : ");
+	Serial.print(temp);
     Serial.write(176); // caractère °
     Serial.write('C');
     Serial.println();
@@ -320,44 +321,44 @@ float temp;
 
     if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
     {
-      if(!mute)
-      digitalWrite(buzzerPin, HIGH);
-      analogWrite(redLedPin,100);
-      analogWrite(blueLedPin, 255);
-      alertTemp = true;
-      Serial.print("ALERT ");
-      Serial.println(temp);
+    	if(!mute)
+    	digitalWrite(buzzerPin, HIGH);
+    	analogWrite(redLedPin, 100.0f/ledIntensite);
+    	analogWrite(blueLedPin, 255);
+    	alertTemp = true;
+    	Serial.print("ALERT ");
+    	Serial.println(temp);
     }
     if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
     {
-      digitalWrite(buzzerPin, LOW);
-      analogWrite(redLedPin,255);
-      alertTemp = false;
-      Serial.print("ALERT IS OVER");
+    	digitalWrite(buzzerPin, LOW);
+    	analogWrite(redLedPin,255);
+    	alertTemp = false;
+    	Serial.print("ALERT IS OVER");
     }
 
 
     if(temp != 0 && ((temp < targetTemp - deltaTemp) || (temp > targetTemp + deltaTemp)))
     {
-      Serial.println("BAD TEMPERATURE");
-      BadTempCounter ++;
-      if(!alertTemp)
-      {
-      analogWrite(blueLedPin, 100);
-      analogWrite(greenLedPin, 255);
-      analogWrite(redLedPin,255);
-      }
-      if(alertTemp)
-      BadTempCounter++;
+    	Serial.println("BAD TEMPERATURE");
+    	BadTempCounter ++;
+    	if(!alertTemp)
+    	{
+    		analogWrite(blueLedPin, 100.0f/ledIntensite);
+    		analogWrite(greenLedPin, 255);
+    		analogWrite(redLedPin,255);
+    	}
+    	if(alertTemp)
+    	BadTempCounter++;
     }
 
     else
     {
-      Serial.println("GOOD TEMPERATURE");
-      GoodTempCounter++;
-      analogWrite(blueLedPin, 255);
-      analogWrite(greenLedPin, 100);
-      analogWrite(redLedPin,255);
+    	Serial.println("GOOD TEMPERATURE");
+    	GoodTempCounter++;
+    	analogWrite(blueLedPin, 255);
+    	analogWrite(greenLedPin, 100.0f/ledIntensite);
+    	analogWrite(redLedPin,255);
     }
 
 
@@ -365,60 +366,60 @@ float temp;
     //Finalement on gère le relai
     if(temp !=0 && temp <= targetTemp - deltaTemp)
     {
-      digitalWrite(relaiChauffage,HIGH);
-      heatMode = 1;
+    	digitalWrite(relaiChauffage,HIGH);
+    	heatMode = 1;
     } 
     else if(temp !=0 && temp >= targetTemp + deltaTemp)
     {
-      digitalWrite(relaiChauffage,LOW);
-      heatMode = 0;                                         
+    	digitalWrite(relaiChauffage,LOW);
+    	heatMode = 0;                                         
     } 
-  }
+}
 
 ///////////////////////
 ///////// LIGHT///////
 //////////////////////
 
-    //////FORCEMODE//////
-    forceModePinState = digitalRead(forceModePin);
-    Serial.println(forceModePinState);
-    
-    if(forceModePinState == LOW && !ForceMode)
-    {
-      ForceMode = true;
-      Serial.println("Enable Forced Mode");
-      if(!dayTime)
-      ChangeLight(dayTime);      
-    }
-    
-    if(forceModePinState == HIGH && ForceMode)
-    {
-      ForceMode = false;
-      Serial.print("Disable Forced Mode");
-    }
-    ///////////////////////
+//////FORCEMODE//////
+forceModePinState = digitalRead(forceModePin);
+Serial.println(forceModePinState);
 
-    if(!ForceMode)
-    {
-      int hour = now.hour();
-      if((hour >= morningTime || hour <= eveningTime) && !dayTime)
-      {
-        dayTime = 1;
-        ChangeLight(dayTime);
-      }
-      if((hour < morningTime || hour > eveningTime) && dayTime)
-      {
-        dayTime = 0;
-        ChangeLight(dayTime);
-      } 
-    }
-    
-    else if(ForceMode)
-    if(!dayTime)
-    {
-      ChangeLight(true); 
-      dayTime = 1;
-    }
+if(forceModePinState == LOW && !ForceMode)
+{
+	ForceMode = true;
+	Serial.println("Enable Forced Mode");
+	if(!dayTime)
+	ChangeLight(dayTime);      
+}
+
+if(forceModePinState == HIGH && ForceMode)
+{
+	ForceMode = false;
+	Serial.print("Disable Forced Mode");
+}
+///////////////////////
+
+if(!ForceMode)
+{
+	int hour = now.hour();
+	if((hour >= morningTime || hour <= eveningTime) && !dayTime)
+	{
+		dayTime = 1;
+		ChangeLight(dayTime);
+	}
+	if((hour < morningTime || hour > eveningTime) && dayTime)
+	{
+		dayTime = 0;
+		ChangeLight(dayTime);
+	} 
+}
+
+else if(ForceMode)
+if(!dayTime)
+{
+	ChangeLight(true); 
+	dayTime = 1;
+}
 
 ///////////////////////
 /////////DISPLAY///////
@@ -460,22 +461,22 @@ lcd.print(now.minute());
 ///----LIGNE 3----//
 lcd.setCursor(0, 2);  // (Colonne,ligne)
 
-if(alertTemp)
-lcd.print("Alerte ! ");
 
-else
-{
-  if(dayTime == 1 && !ForceMode){
-    lcd.print("Daytime, night at ");
-    lcd.print(eveningTime);
-    lcd.print("");
-  }
+if(dayTime == 1 && !ForceMode){
+	lcd.print("Daytime, night at ");
+	lcd.print(eveningTime);
+	lcd.print("");
+}
 
-  else {
-    lcd.print("Night,   day at ");
-    lcd.print(morningTime);
-    lcd.print("   ");
-  }
+else {
+	lcd.print("Night,   day at ");
+	lcd.print(morningTime);
+	lcd.print("   ");
+}
+
+if(alertTemp){
+	lcd.setCursor(0, 2);  // (Colonne,ligne)
+	lcd.print("Alerte ! ");
 }
 
 //////////////////// 
