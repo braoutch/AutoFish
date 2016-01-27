@@ -10,17 +10,16 @@
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 //wifi
-String NomduReseauWifi = "Entrez le nom de votre Box ou point d'accès Wifi"; // Garder les guillements
-String MotDePasse      = "Entrez le nom du mot de passe de votre Box ou point d'accès Wifi"; // Garder les guillements
+String NomduReseauWifi = "wayne"; // Garder les guillements
+String MotDePasse      = "antoinee"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
 int lastSending = -1;
-int sendFrequency = 1;
+int sendFrequency = 1;  //en minutes
 
 //Pins
 int buzzerPin = 4;
-float ledIntensite = 0.6f;	//Valeur de 0.4 à 1 (1 = fort, 0.4 = éteint) 
 
 int blueLedPin = 18;
 int greenLedPin = 19;
@@ -49,7 +48,9 @@ float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
-int horaireReveil[] = {15,0};
+int horaireReveil[] = {17,0};
+
+int ledIntensite = 100;  //Valeur de 0 à 255 (0 = fort, 255 = éteint) 
 ///////////////////////////
 ///////////////////////////
 
@@ -204,6 +205,17 @@ void setup() {
 
   Serial.begin(9600);
 
+  //Display init
+  lcd.init(); 
+  lcd.backlight();
+  lcd.setCursor(5, 0);  // (Colonne,ligne)
+  Serial.print("Displaying introduction...");
+  lcd.print("AUTOFISH");
+  lcd.setCursor(4, 1);
+  lcd.print("says Hello");
+  PlayMusic(1);
+  Serial.print("End of introduction...");
+  
   //wifi
   Serial1.begin(9600);  
   initESP8266();
@@ -226,25 +238,17 @@ void setup() {
   analogWrite(blueLedPin,255);
   analogWrite(greenLedPin,255);
 
-  //Display init
-  lcd.init(); 
-  lcd.backlight();
-  lcd.setCursor(5, 1);  // (Colonne,ligne)
-  Serial.print("Displaying introduction...");
-  lcd.print("AUTOFISH");
-  lcd.setCursor(4, 2);
-  lcd.print("says Hello");
-  PlayMusic(1);
-  Serial.print("End of introduction...");
-
   //RTC init
+
+  lcd.setCursor(0,3);
+  lcd.print(" RTC Module init    ");
+  
   RTC.begin();
-  RTC.adjust(DateTime(__DATE__, __TIME__));
+  //RTC.adjust(DateTime(__DATE__, __TIME__));
   DateTime initNow = RTC.now();
   thisMonth = initNow.day();
   //thisMonth = initNow.month();
   Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
-  lcd.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////LOOP////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +337,6 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     Serial.println();
 
     //SendToWifi
-
     if(now.minute() - lastSending >= sendFrequency){
     SendToWifi(String(lastTemp));
     lastSending = now.minute();
@@ -343,7 +346,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     {
     	if(!mute)
     	digitalWrite(buzzerPin, HIGH);
-    	analogWrite(redLedPin, 100.0f/ledIntensite);
+    	analogWrite(redLedPin, ledIntensite);
     	analogWrite(blueLedPin, 255);
     	alertTemp = true;
     	Serial.print("ALERT ");
@@ -364,7 +367,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	BadTempCounter ++;
     	if(!alertTemp)
     	{
-    		analogWrite(blueLedPin, 100.0f/ledIntensite);
+    		analogWrite(blueLedPin, ledIntensite);
     		analogWrite(greenLedPin, 255);
     		analogWrite(redLedPin,255);
     	}
@@ -377,7 +380,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	Serial.println("GOOD TEMPERATURE");
     	GoodTempCounter++;
     	analogWrite(blueLedPin, 255);
-    	analogWrite(greenLedPin, 100.0f/ledIntensite);
+    	analogWrite(greenLedPin, ledIntensite);
     	analogWrite(redLedPin,255);
     }
 
@@ -422,12 +425,12 @@ if(forceModePinState == HIGH && ForceMode)
 if(!ForceMode)
 {
 	int hour = now.hour();
-	if((hour >= morningTime || hour <= eveningTime) && !dayTime)
+	if((hour >= morningTime || hour < eveningTime) && !dayTime)
 	{
 		dayTime = 1;
 		ChangeLight(dayTime);
 	}
-	if((hour < morningTime || hour > eveningTime) && dayTime)
+	if((hour < morningTime || hour >= eveningTime) && dayTime)
 	{
 		dayTime = 0;
 		ChangeLight(dayTime);
@@ -444,7 +447,6 @@ if(!dayTime)
 ///////////////////////
 /////////DISPLAY///////
 ///////////////////////
-
 ////////////////////
 ///----LIGNE 1----//
 lcd.setCursor(0, 0);  // (Colonne,ligne)
@@ -480,24 +482,28 @@ lcd.print(now.minute());
 ////////////////////
 ///----LIGNE 3----//
 lcd.setCursor(0, 2);  // (Colonne,ligne)
+if(alertTemp){
+  lcd.print("Alerte ! ");
+}
+else{
+  if(dayTime == 1)
+  lcd.print("Daytime, ");
+   if(dayTime == 0)
+  lcd.print("Night,   ");
+}
 
-
-if(dayTime == 1 && !ForceMode){
-	lcd.print("Daytime, night at ");
+if(dayTime == 1){
+	lcd.print("night at ");
 	lcd.print(eveningTime);
 	lcd.print("");
 }
 
 else {
-	lcd.print("Night,   day at ");
+	lcd.print("day at ");
 	lcd.print(morningTime);
-	lcd.print("   ");
+	lcd.print("h ");
 }
 
-if(alertTemp){
-	lcd.setCursor(0, 2);  // (Colonne,ligne)
-	lcd.print("Alerte ! ");
-}
 
 //////////////////// 
 ///----LIGNE 4----//
@@ -519,13 +525,19 @@ void initESP8266()
 {  
   Serial.println("**********************************************************");  
   Serial.println("**************** DEBUT DE L'INITIALISATION ***************");
-  Serial.println("**********************************************************");  
+  Serial.println("**********************************************************");
+  lcd.setCursor(0,3);
+  lcd.print("ESP8266 Module init");
   envoieAuESP8266("AT+RST");
   recoitDuESP8266(2000);
   Serial.println("**********************************************************");
+  lcd.setCursor(0,3);
+  lcd.print("Looking for WiFi...");
   envoieAuESP8266("AT+CWMODE=3");
   recoitDuESP8266(5000);
   Serial.println("**********************************************************");
+  lcd.setCursor(0,3);
+  lcd.print("   Connecting...   ");
   envoieAuESP8266("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
   recoitDuESP8266(10000);
   Serial.println("**********************************************************");
