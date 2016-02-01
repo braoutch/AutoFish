@@ -1,3 +1,1 @@
-http://api.thingspeak.com/update
-? key : YCBS447TES9C1OTU
-? field1 : 26.5
+http=//api.thingspeak.com/update?key=YCBS447TES9C1OTU&field1=26.5

@@ -10,6 +10,7 @@
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 //wifi
+char serialbuffer[200];//serial buffer for request url
 String NomduReseauWifi = "wayne"; // Garder les guillements
 String MotDePasse      = "antoinee"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
@@ -48,7 +49,7 @@ float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
-int horaireReveil[] = {17,0};
+int horaireReveil[] = {06,45};
 
 int ledIntensite = 100;  //Valeur de 0 à 255 (0 = fort, 255 = éteint) 
 ///////////////////////////
@@ -77,18 +78,23 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 RTC_DS1307 RTC; //L'horloge RTC
 
 //Réveil et sons
-int melody[] = {
+int melody[][4] = {{
 	NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
-};
+},{
+  NOTE_C5, NOTE_G4, NOTE_E4, NOTE_C4
+}};
+
 int reveil[] = {
 	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
 	NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4,
 	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
 	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
 };
-int noteDurations[] = {
+int noteDurations[][4] = {{
 	6, 6, 6, 3
-};
+},{
+  6, 6, 6, 3
+}};
 int reveilDurations[] = {
 	12,12,12,12,6,6,12,12,12,12,6,6,
 	12,12,12,12,12,12,6,12,12,12,12,12,12,6,
@@ -161,7 +167,7 @@ void ChangeLight(boolean lightOn)
 ////////////////////
 /////////MUSIC//////
 ////////////////////
-void PlayMusic(int musicNumber){
+void PlayMusic(int musicNumber, int index = 0){
 	switch (musicNumber) {
 		case 1 :
 		for (int thisNote = 0; thisNote<4 ; thisNote++) {
@@ -169,8 +175,8 @@ void PlayMusic(int musicNumber){
     // to calculate the note duration, take one second
     // divided by the note type.
     //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 2000 / noteDurations[thisNote];
-    tone(buzzerPin, melody[thisNote], noteDuration);
+    int noteDuration = 2000 / noteDurations[index][thisNote];
+    tone(buzzerPin, melody[index][thisNote], noteDuration);
 
     // to distinguish the notes, set a minimum time between them.
     // the note's duration + 30% seems to work well:
@@ -203,21 +209,21 @@ break;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
 
-  Serial.begin(9600);
-
+  Serial.begin(115200);
+  Serial1.begin(115200);
+  
   //Display init
   lcd.init(); 
   lcd.backlight();
   lcd.setCursor(5, 0);  // (Colonne,ligne)
-  Serial.print("Displaying introduction...");
+  Serial.println("Displaying introduction...");
   lcd.print("AUTOFISH");
   lcd.setCursor(4, 1);
   lcd.print("says Hello");
   PlayMusic(1);
-  Serial.print("End of introduction...");
+  Serial.println("End of introduction...");
   
   //wifi
-  Serial1.begin(9600);  
   initESP8266();
   
   pinMode(buzzerPin, OUTPUT);
@@ -248,15 +254,47 @@ void setup() {
   DateTime initNow = RTC.now();
   thisMonth = initNow.day();
   //thisMonth = initNow.month();
-  Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
+  //Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////LOOP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
-	if (! RTC.isrunning()) 
-	Serial.println("RTC is NOT running!");
+//	if (! RTC.isrunning()) 
+//	Serial.println("RTC is NOT running!");
+
+////////////////////////////
+//////WIFI HAS SOMETHING TO SAY?
+////////////////////////////
+
+//output everything from ESP8266 to the Arduino Micro Serial output
+  while (Serial1.available() > 0) {
+    Serial.write(Serial1.read());
+  }
+  
+  if (Serial.available() > 0) {
+     //read from serial until terminating character
+     int len = Serial.readBytesUntil('\n', serialbuffer, sizeof(serialbuffer));
+  
+     //trim buffer to length of the actual message
+     String message = String(serialbuffer).substring(0,len-1);
+     Serial.println("message: " + message);
+ 
+     //check to see if the incoming serial message is a url or an AT command
+//     if(message.substring(0,2)=="AT"){
+//       //make command request
+//       Serial.println("COMMAND REQUEST");
+//       Serial1.println(message); 
+//     }else{
+//      //make webrequest
+//       Serial.println("WEB REQUEST");
+//       //WebRequest(message);
+//     }
+  }//output everything from ESP8266 to the Arduino Micro Serial output
+  while (Serial1.available() > 0) {
+    Serial.write(Serial1.read());
+  }
 
 ///La date qui sert partout
 DateTime now = RTC.now();
@@ -272,7 +310,7 @@ if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
 reveilDone = 0;
 
 
-Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
+//Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
 ///////////////////////
 //// ----FOOD---///////
 ///////////////////////
@@ -363,7 +401,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
 
     if(temp != 0 && ((temp < targetTemp - deltaTemp) || (temp > targetTemp + deltaTemp)))
     {
-    	Serial.println("BAD TEMPERATURE");
+    	//Serial.println("BAD TEMPERATURE");
     	BadTempCounter ++;
     	if(!alertTemp)
     	{
@@ -405,7 +443,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
 
 //////FORCEMODE//////
 forceModePinState = digitalRead(forceModePin);
-Serial.println(forceModePinState);
+//Serial.println(forceModePinState);
 
 if(forceModePinState == LOW && !ForceMode)
 {
@@ -418,22 +456,24 @@ if(forceModePinState == LOW && !ForceMode)
 if(forceModePinState == HIGH && ForceMode)
 {
 	ForceMode = false;
-	Serial.print("Disable Forced Mode");
+	Serial.println("Disable Forced Mode");
 }
 ///////////////////////
 
 if(!ForceMode)
 {
 	int hour = now.hour();
-	if((hour >= morningTime || hour < eveningTime) && !dayTime)
+	if((hour >= morningTime && hour < eveningTime) && !dayTime)
 	{
 		dayTime = 1;
 		ChangeLight(dayTime);
+    PlayMusic(1);
 	}
 	if((hour < morningTime || hour >= eveningTime) && dayTime)
 	{
 		dayTime = 0;
 		ChangeLight(dayTime);
+    PlayMusic(1,1);
 	} 
 }
 
@@ -528,79 +568,50 @@ void initESP8266()
   Serial.println("**********************************************************");
   lcd.setCursor(0,3);
   lcd.print("ESP8266 Module init");
-  envoieAuESP8266("AT+RST");
-  recoitDuESP8266(2000);
-  Serial.println("**********************************************************");
+  Serial1.println("AT+RST");
+  Serial1.println("AT+CWMODE=1");
   lcd.setCursor(0,3);
   lcd.print("Looking for WiFi...");
-  envoieAuESP8266("AT+CWMODE=3");
-  recoitDuESP8266(5000);
-  Serial.println("**********************************************************");
-  lcd.setCursor(0,3);
-  lcd.print("   Connecting...   ");
-  envoieAuESP8266("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  recoitDuESP8266(10000);
-  Serial.println("**********************************************************");
-  //envoieAuESP8266("AT+CIFSR");
-  //recoitDuESP8266(1000);
-  Serial.println("**********************************************************");
-  //envoieAuESP8266("AT+CIPMUX=1");   
-  //recoitDuESP8266(1000);
-  Serial.println("**********************************************************");
-  //envoieAuESP8266("AT+CIPSERVER=1,80");
-  //recoitDuESP8266(1000);
+  delay(500);
+  
+  Serial1.println("AT+RST");
+  //connect to wifi network
+  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+  delay(2000);
   Serial.println("**********************************************************");
   Serial.println("***************** INITIALISATION TERMINEE ****************");
   Serial.println("**********************************************************");
-  Serial.println("");  
-}
-
-/****************************************************************/
-/*        Fonction qui envoie une commande à l'ESP8266          */
-/****************************************************************/
-void envoieAuESP8266(String commande)
-{  
-  Serial1.println(commande);
-}
-/****************************************************************/
-/*Fonction qui lit et affiche les messages envoyés par l'ESP8266*/
-/****************************************************************/
-void recoitDuESP8266(const int timeout)
-{
-  String reponse = "";
-  long int time = millis();
-  while( (time+timeout) > millis())
-  {
-    while(Serial1.available())
-    {
-      char c = Serial1.read();
-      reponse+=c;
-    }
-  }
-  Serial.print(reponse);   
+  Serial.println("");
+  Serial1.println("AT+CIFSFR");  
 }
 
 /******************************************/
 /*ENVOYER A THINGSPEAK*********************/
 /******************************************/
+
 void SendToWifi(String tenmpF){
+
+  Serial.println("Sending data to thingsPeak");
   String cmd = "AT+CIPSTART=\"TCP\",\"";
   cmd += IP;
   cmd += "\",80";
   Serial.println(cmd);
+  Serial1.println(cmd);
   delay(2000);
-  if(Serial.find("Error")){
+  if(Serial1.find("ERROR")){
+    Serial.println("Échec de l'envoi");
     return;
   }
   cmd = GET;
   cmd += tenmpF;
   cmd += "\r\n";
-  Serial.print("AT+CIPSEND=");
-  Serial.println(cmd.length());
-  if(Serial.find(">")){
-    Serial.print(cmd);
+  Serial1.print("AT+CIPSEND=");
+  Serial1.println(cmd.length());
+  if(Serial1.find(">")){
+    Serial1.print(cmd);
   }else{
-    Serial.println("AT+CIPCLOSE");
+    Serial1.println("AT+CIPCLOSE");
+    Serial.println("RATÉ");
   }
 }
 
