@@ -10,13 +10,13 @@
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 //wifi
-char serialbuffer[200];//serial buffer for request url
+char serialbuffer[150];//serial buffer for request url
 String NomduReseauWifi = "wayne"; // Garder les guillements
 String MotDePasse      = "antoinee"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
-int lastSending = -1;
+int lastSending = -10;
 int sendFrequency = 1;  //en minutes
 
 //Pins
@@ -224,7 +224,7 @@ void setup() {
   Serial.println("End of introduction...");
   
   //wifi
-  initESP8266();
+  //initESP8266();
   
   pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -280,24 +280,27 @@ void loop()
      //trim buffer to length of the actual message
      String message = String(serialbuffer).substring(0,len-1);
      Serial.println("message: " + message);
- 
-     //check to see if the incoming serial message is a url or an AT command
-//     if(message.substring(0,2)=="AT"){
-//       //make command request
-//       Serial.println("COMMAND REQUEST");
-//       Serial1.println(message); 
-//     }else{
-//      //make webrequest
-//       Serial.println("WEB REQUEST");
-//       //WebRequest(message);
-//     }
+
   }//output everything from ESP8266 to the Arduino Micro Serial output
   while (Serial1.available() > 0) {
     Serial.write(Serial1.read());
   }
 
+
 ///La date qui sert partout
 DateTime now = RTC.now();
+
+//SendToWifi
+int minutes = now.minute();
+//Serial.println("Do i send to wifi ? last time was at " + (String)lastSending + ", this is " + (String)minutes);
+    if((minutes - lastSending) >= sendFrequency){
+      Serial.println("Sending to Wifi");
+    SendToWifi(String(lastTemp));
+    lastSending = minutes;
+    if (lastSending == 59)
+    lastSending = -1;
+    
+    }
 ////////////////////////
 //// ----Réveil---///////
 ////////////////////////
@@ -370,20 +373,12 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
 	lastTemp = temp;
 	Serial.print("Temperature : ");
 	Serial.print(temp);
-    Serial.write(176); // caractère °
-    Serial.write('C');
-    Serial.println();
-
-    //SendToWifi
-    if(now.minute() - lastSending >= sendFrequency){
-    SendToWifi(String(lastTemp));
-    lastSending = now.minute();
-    }
+  Serial.println(" degrés");
 
     if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
     {
-    	if(!mute)
-    	digitalWrite(buzzerPin, HIGH);
+    	//if(!mute)
+    	//digitalWrite(buzzerPin, HIGH);
     	analogWrite(redLedPin, ledIntensite);
     	analogWrite(blueLedPin, 255);
     	alertTemp = true;
@@ -395,7 +390,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	digitalWrite(buzzerPin, LOW);
     	analogWrite(redLedPin,255);
     	alertTemp = false;
-    	Serial.print("ALERT IS OVER");
+    	Serial.println("ALERT IS OVER");
     }
 
 
@@ -563,26 +558,22 @@ lcd.print("%");
 /****************************************************************/
 void initESP8266()
 {  
-  Serial.println("**********************************************************");  
-  Serial.println("**************** DEBUT DE L'INITIALISATION ***************");
-  Serial.println("**********************************************************");
+  Serial.println("Restarting WiFi !");
   lcd.setCursor(0,3);
   lcd.print("ESP8266 Module init");
   Serial1.println("AT+RST");
+  delay(500);
   Serial1.println("AT+CWMODE=1");
   lcd.setCursor(0,3);
   lcd.print("Looking for WiFi...");
   delay(500);
   
-  Serial1.println("AT+RST");
+  //Serial1.println("AT+RST");
   //connect to wifi network
   Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
   delay(2000);
-  Serial.println("**********************************************************");
-  Serial.println("***************** INITIALISATION TERMINEE ****************");
-  Serial.println("**********************************************************");
-  Serial.println("");
-  Serial1.println("AT+CIFSFR");  
+
+  lcd.clear();
 }
 
 /******************************************/
@@ -600,18 +591,22 @@ void SendToWifi(String tenmpF){
   delay(2000);
   if(Serial1.find("ERROR")){
     Serial.println("Échec de l'envoi");
+    initESP8266();
     return;
   }
+  Serial.println("Just sent " + cmd);
   cmd = GET;
   cmd += tenmpF;
   cmd += "\r\n";
   Serial1.print("AT+CIPSEND=");
   Serial1.println(cmd.length());
   if(Serial1.find(">")){
-    Serial1.print(cmd);
+    Serial1.println(cmd);
+    Serial.println("Just sent " + cmd);
   }else{
     Serial1.println("AT+CIPCLOSE");
     Serial.println("RATÉ");
+    initESP8266();
   }
 }
 
