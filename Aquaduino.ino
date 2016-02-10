@@ -35,9 +35,10 @@ long feedingInitTime = 0;
 
 //relais
 int relaiLumiere = 15;      //La lumière                   
-int relaiChauffage = 14;                       
-int relaiBulleur = 16 ;                      
-int relaiPompe = 10;
+int relaiChauffage = 14;  
+int relaiPompe = 16;                     
+int relaiBulleur = 10 ;                      
+
 
 int dayTime = 0;
 
@@ -167,7 +168,7 @@ void ChangeLight(boolean lightOn)
 ////////////////////
 /////////MUSIC//////
 ////////////////////
-void PlayMusic(int musicNumber, int index = 0){
+void PlayMusic(int musicNumber, int index){
 	switch (musicNumber) {
 		case 1 :
 		for (int thisNote = 0; thisNote<4 ; thisNote++) {
@@ -220,7 +221,7 @@ void setup() {
   lcd.print("AUTOFISH");
   lcd.setCursor(4, 1);
   lcd.print("says Hello");
-  PlayMusic(1);
+  //PlayMusic(1);
   Serial.println("End of introduction...");
   
   //wifi
@@ -238,7 +239,7 @@ void setup() {
   pinMode(relaiPompe,OUTPUT);
   
   digitalWrite(buzzerPin,LOW);
-  digitalWrite(relaiPompe,HIGH);
+  digitalWrite(relaiPompe,LOW);
 
   analogWrite(redLedPin,255);
   analogWrite(blueLedPin,255);
@@ -306,7 +307,7 @@ int minutes = now.minute();
 ////////////////////////
 
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1] && reveilDone == 0){
-	PlayMusic(2);
+	PlayMusic(2,0);
 	reveilDone = 1;
 }
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
@@ -323,7 +324,8 @@ if(!feeding && foodModePinState == LOW)
 {
 	feeding = true;
 	feedingInitTime = now.minute();
-	digitalWrite(relaiPompe,LOW);
+	digitalWrite(relaiPompe,HIGH);
+ Serial.println("Time for feeding !");
 }
 
 if(feeding)
@@ -333,7 +335,7 @@ if(feeding)
 		if(now.minute() >= feedingInitTime+5)
 		{
 			feeding = false;
-			digitalWrite(relaiPompe,HIGH);
+			digitalWrite(relaiPompe,LOW);
 		}
 	}
 
@@ -342,7 +344,7 @@ if(feeding)
 		if(now.minute()+60 >= feedingInitTime+5)
 		{
 			feeding = false;
-			digitalWrite(relaiPompe,HIGH);
+			digitalWrite(relaiPompe,LOW);
 		}
 	}
 
@@ -462,7 +464,7 @@ if(!ForceMode)
 	{
 		dayTime = 1;
 		ChangeLight(dayTime);
-    PlayMusic(1);
+    PlayMusic(1,0);
 	}
 	if((hour < morningTime || hour >= eveningTime) && dayTime)
 	{
@@ -609,6 +611,7 @@ void SendToWifi(String tenmpF){
     initESP8266();
   }
 }
+
 
 
 
