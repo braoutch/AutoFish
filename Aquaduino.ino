@@ -1,3 +1,4 @@
+
 //THIS IS A TEST
 
 #include "pitches.h"
@@ -50,7 +51,7 @@ float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
-int horaireReveil[] = {06,45};
+int horaireReveil[] = {06,25};
 
 int ledIntensite = 100;  //Valeur de 0 à 255 (0 = fort, 255 = éteint) 
 ///////////////////////////
@@ -92,9 +93,9 @@ int reveil[] = {
 	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
 };
 int noteDurations[][4] = {{
-	6, 6, 6, 3
+	8, 16, 16, 4
 },{
-  6, 6, 6, 3
+  8, 16, 16, 4
 }};
 int reveilDurations[] = {
 	12,12,12,12,6,6,12,12,12,12,6,6,
@@ -157,11 +158,13 @@ void ChangeLight(boolean lightOn)
 	if(lightOn){
 		digitalWrite(relaiLumiere, HIGH);
 		digitalWrite(relaiBulleur, HIGH);
+    PlayMusic(1,0);
 	}
 
 	if(!lightOn){
 		digitalWrite(relaiLumiere, LOW);
 		digitalWrite(relaiBulleur, LOW);
+    PlayMusic(1,1);
 	}
 }
 
@@ -446,8 +449,8 @@ if(forceModePinState == LOW && !ForceMode)
 {
 	ForceMode = true;
 	Serial.println("Enable Forced Mode");
-	if(!dayTime)
-	ChangeLight(dayTime);      
+	//if(!dayTime)
+	//ChangeLight(dayTime);      
 }
 
 if(forceModePinState == HIGH && ForceMode)
@@ -464,13 +467,13 @@ if(!ForceMode)
 	{
 		dayTime = 1;
 		ChangeLight(dayTime);
-    PlayMusic(1,0);
+    //PlayMusic(1,0);
 	}
 	if((hour < morningTime || hour >= eveningTime) && dayTime)
 	{
 		dayTime = 0;
 		ChangeLight(dayTime);
-    PlayMusic(1,1);
+    //PlayMusic(1,1);
 	} 
 }
 
