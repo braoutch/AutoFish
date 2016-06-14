@@ -1,6 +1,3 @@
-
-//THIS IS A TEST
-
 #include "pitches.h"
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
@@ -21,7 +18,7 @@ int lastSending = -10;
 int sendFrequency = 1;  //en minutes
 
 //Pins
-int buzzerPin = 4;
+//int buzzerPin = 4;
 
 int blueLedPin = 18;
 int greenLedPin = 19;
@@ -158,20 +155,20 @@ void ChangeLight(boolean lightOn)
 	if(lightOn){
 		digitalWrite(relaiLumiere, HIGH);
 		digitalWrite(relaiBulleur, HIGH);
-    PlayMusic(1,0);
+//    PlayMusic(1,0);
 	}
 
 	if(!lightOn){
 		digitalWrite(relaiLumiere, LOW);
 		digitalWrite(relaiBulleur, LOW);
-    PlayMusic(1,1);
+//    PlayMusic(1,1);
 	}
 }
 
 ////////////////////
 /////////MUSIC//////
 ////////////////////
-void PlayMusic(int musicNumber, int index){
+/*void PlayMusic(int musicNumber, int index){
 	switch (musicNumber) {
 		case 1 :
 		for (int thisNote = 0; thisNote<4 ; thisNote++) {
@@ -207,7 +204,7 @@ for (int thisNote = 0; thisNote < 52; thisNote++) {
 break;
 }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////SETUP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +227,7 @@ void setup() {
   //wifi
   //initESP8266();
   
-  pinMode(buzzerPin, OUTPUT);
+  //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
   pinMode(redLedPin, OUTPUT);
@@ -241,7 +238,7 @@ void setup() {
   pinMode(relaiBulleur,OUTPUT);
   pinMode(relaiPompe,OUTPUT);
   
-  digitalWrite(buzzerPin,LOW);
+  //digitalWrite(buzzerPin,LOW);
   digitalWrite(relaiPompe,LOW);
 
   analogWrite(redLedPin,255);
@@ -308,15 +305,22 @@ int minutes = now.minute();
 ////////////////////////
 //// ----Réveil---///////
 ////////////////////////
-
+/*
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1] && reveilDone == 0){
+	int c = (14 - now.month())/12;
+  int a = now.year() - c;
+  int m = now.month() + 12*c - 2;
+
+  int j = (now.day() + a + a/4 - a/100 + a/400 + (31*m)/12)%7;
+
+  if(c !=0 && c != 6)
 	PlayMusic(2,0);
 	reveilDone = 1;
 }
 if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
 reveilDone = 0;
 
-
+*/
 //Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
 ///////////////////////
 //// ----FOOD---///////
@@ -392,7 +396,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     }
     if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
     {
-    	digitalWrite(buzzerPin, LOW);
+    	//digitalWrite(buzzerPin, LOW);
     	analogWrite(redLedPin,255);
     	alertTemp = false;
     	Serial.println("ALERT IS OVER");
@@ -533,15 +537,15 @@ else{
 }
 
 if(dayTime == 1){
-	lcd.print("night at ");
+	lcd.print("nuit a ");
 	lcd.print(eveningTime);
-	lcd.print("");
+	lcd.print("h");
 }
 
 else {
-	lcd.print("day at ");
+	lcd.print("jour a ");
 	lcd.print(morningTime);
-	lcd.print("h ");
+	lcd.print("h");
 }
 
 
@@ -555,7 +559,7 @@ lcd.print("MODE FORCE  ");
 
 lcd.print((GoodTempCounter/(GoodTempCounter + BadTempCounter)),1);
 lcd.print("%");
-
+delay(500);
 }
 
 /****************************************************************/
@@ -611,7 +615,7 @@ void SendToWifi(String tenmpF){
   }else{
     Serial1.println("AT+CIPCLOSE");
     Serial.println("RATÉ");
-    initESP8266();
+    //initESP8266();
   }
 }
 
