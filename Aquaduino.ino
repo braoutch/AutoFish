@@ -9,8 +9,8 @@
 
 //wifi
 char serialbuffer[150];//serial buffer for request url
-String NomduReseauWifi = "wayne"; // Garder les guillements
-String MotDePasse      = "antoinee"; // Garder les guillements
+String NomduReseauWifi = "freebox-manon"; // Garder les guillements
+String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
@@ -225,7 +225,7 @@ void setup() {
   Serial.println("End of introduction...");
   
   //wifi
-  //initESP8266();
+  initESP8266();
   
   //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -298,7 +298,7 @@ int minutes = now.minute();
       Serial.println("Sending to Wifi");
     SendToWifi(String(lastTemp));
     lastSending = minutes;
-    if (lastSending == 59)
+    if (lastSending >= 59)
     lastSending = -1;
     
     }
@@ -434,7 +434,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	digitalWrite(relaiChauffage,HIGH);
     	heatMode = 1;
     } 
-    else if(temp !=0 && temp >= targetTemp + deltaTemp)
+    if(temp !=0 && temp >= targetTemp + deltaTemp)
     {
     	digitalWrite(relaiChauffage,LOW);
     	heatMode = 0;                                         
@@ -600,7 +600,7 @@ void SendToWifi(String tenmpF){
   delay(2000);
   if(Serial1.find("ERROR")){
     Serial.println("Échec de l'envoi");
-    initESP8266();
+    //initESP8266();
     return;
   }
   Serial.println("Just sent " + cmd);
