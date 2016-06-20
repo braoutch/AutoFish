@@ -234,9 +234,13 @@ void setup() {
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
   pinMode(relaiLumiere,OUTPUT);
+    delay(500);
   pinMode(relaiChauffage,OUTPUT);
+  delay(500);
   pinMode(relaiBulleur,OUTPUT);
+    delay(500);
   pinMode(relaiPompe,OUTPUT);
+    delay(500);
   
   //digitalWrite(buzzerPin,LOW);
   digitalWrite(relaiPompe,LOW);
@@ -557,7 +561,7 @@ lcd.print("MODE AUTO   ");
 if(ForceMode)  
 lcd.print("MODE FORCE  ");
 
-lcd.print((GoodTempCounter/(GoodTempCounter + BadTempCounter)),1);
+lcd.print(100*(GoodTempCounter/(GoodTempCounter + BadTempCounter)),0);
 lcd.print("%");
 delay(500);
 }
@@ -571,16 +575,19 @@ void initESP8266()
   lcd.setCursor(0,3);
   lcd.print("ESP8266 Module init");
   Serial1.println("AT+RST");
-  delay(500);
+  delay(2000);
   Serial1.println("AT+CWMODE=1");
   lcd.setCursor(0,3);
   lcd.print("Looking for WiFi...");
-  delay(500);
-  
-  //Serial1.println("AT+RST");
+  delay(2000);
+
+  Serial1.println("AT+RST");
+  delay(2000);
   //connect to wifi network
   Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  delay(2000);
+  lcd.setCursor(0,4);
+  lcd.print(NomduReseauWifi);
+  delay(5000);
 
   lcd.clear();
 }
@@ -600,6 +607,9 @@ void SendToWifi(String tenmpF){
   delay(2000);
   if(Serial1.find("ERROR")){
     Serial.println("Échec de l'envoi");
+    lcd.setCursor(0,4);
+    lcd.print("No connection");
+    delay(5000);
     //initESP8266();
     return;
   }
