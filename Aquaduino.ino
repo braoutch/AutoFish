@@ -9,7 +9,7 @@
 
 //wifi
 char serialbuffer[150];//serial buffer for request url
-String NomduReseauWifi = "freebox-manon"; // Garder les guillements
+String NomduReseauWifi = "freebox_manon"; // Garder les guillements
 String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
@@ -32,9 +32,9 @@ boolean feeding = false;     //Pour savoir si la bouffe est en cours de distribu
 long feedingInitTime = 0;
 
 //relais
-int relaiLumiere = 15;      //La lumière                   
+int relaiLumiere = 16;      //La lumière                   
 int relaiChauffage = 14;  
-int relaiPompe = 16;                     
+int relaiPompe = 15;                     
 int relaiBulleur = 10 ;                      
 
 
@@ -153,15 +153,13 @@ boolean getTemperature(float *temp)
 void ChangeLight(boolean lightOn)
 {
 	if(lightOn){
-		digitalWrite(relaiLumiere, HIGH);
+		digitalWrite(relaiLumiere, LOW);
 		digitalWrite(relaiBulleur, HIGH);
-//    PlayMusic(1,0);
 	}
 
 	if(!lightOn){
-		digitalWrite(relaiLumiere, LOW);
+		digitalWrite(relaiLumiere, HIGH);
 		digitalWrite(relaiBulleur, LOW);
-//    PlayMusic(1,1);
 	}
 }
 
@@ -225,7 +223,7 @@ void setup() {
   Serial.println("End of introduction...");
   
   //wifi
-  initESP8266();
+  //initESP8266();
   
   //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -240,24 +238,21 @@ void setup() {
   pinMode(relaiBulleur,OUTPUT);
     delay(500);
   pinMode(relaiPompe,OUTPUT);
-    delay(500);
+   delay(500);
   
   //digitalWrite(buzzerPin,LOW);
-  digitalWrite(relaiPompe,LOW);
+ digitalWrite(relaiPompe,HIGH);
+ digitalWrite(relaiLumiere, HIGH);
+
 
   analogWrite(redLedPin,255);
   analogWrite(blueLedPin,255);
   analogWrite(greenLedPin,255);
 
-  //RTC init
-
-  lcd.setCursor(0,3);
-  lcd.print(" RTC Module init    ");
-  
   RTC.begin();
   //RTC.adjust(DateTime(__DATE__, __TIME__));
   DateTime initNow = RTC.now();
-  thisMonth = initNow.day();
+  thisMonth = initNow.month();
   //thisMonth = initNow.month();
   //Serial.println((String)initNow.day()+"/" + (String)initNow.month()+"/" + (String)initNow.year()); 
 }
@@ -335,7 +330,7 @@ if(!feeding && foodModePinState == LOW)
 {
 	feeding = true;
 	feedingInitTime = now.minute();
-	digitalWrite(relaiPompe,HIGH);
+	digitalWrite(relaiPompe,LOW);
  Serial.println("Time for feeding !");
 }
 
@@ -346,7 +341,7 @@ if(feeding)
 		if(now.minute() >= feedingInitTime+5)
 		{
 			feeding = false;
-			digitalWrite(relaiPompe,LOW);
+			digitalWrite(relaiPompe,HIGH);
 		}
 	}
 
@@ -355,7 +350,7 @@ if(feeding)
 		if(now.minute()+60 >= feedingInitTime+5)
 		{
 			feeding = false;
-			digitalWrite(relaiPompe,LOW);
+			digitalWrite(relaiPompe,HIGH);
 		}
 	}
 
@@ -367,10 +362,10 @@ if(feeding)
 /////////EVERY MONTH////////
 /////////////////////////////
 
-if(now.day() == thisMonth + 1 || now.day() - thisMonth > 9)
+if(now.month() == thisMonth + 1 || now.month() - thisMonth > 9)
 //if(now.month() == thisMonth + 1)
 {
-	thisMonth = now.day() ;
+	thisMonth = now.month() ;
 	GoodTempCounter = 0;
 	BadTempCounter = 0;
 }
@@ -579,15 +574,14 @@ void initESP8266()
   Serial1.println("AT+CWMODE=1");
   lcd.setCursor(0,3);
   lcd.print("Looking for WiFi...");
-  delay(2000);
-
-  Serial1.println("AT+RST");
-  delay(2000);
+  delay(5000);
   //connect to wifi network
   Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  lcd.setCursor(0,4);
+  lcd.setCursor(0,3);
+  lcd.print("                    ");
+  lcd.setCursor(0,3);
   lcd.print(NomduReseauWifi);
-  delay(5000);
+  delay(10000);
 
   lcd.clear();
 }
@@ -607,8 +601,6 @@ void SendToWifi(String tenmpF){
   delay(2000);
   if(Serial1.find("ERROR")){
     Serial.println("Échec de l'envoi");
-    lcd.setCursor(0,4);
-    lcd.print("No connection");
     delay(5000);
     //initESP8266();
     return;
@@ -625,6 +617,10 @@ void SendToWifi(String tenmpF){
   }else{
     Serial1.println("AT+CIPCLOSE");
     Serial.println("RATÉ");
+        lcd.setCursor(0,3);
+    lcd.print("                    ");
+            lcd.setCursor(0,3);
+    lcd.print("No connection");
     //initESP8266();
   }
 }
