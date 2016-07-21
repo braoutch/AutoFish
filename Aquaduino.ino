@@ -2,9 +2,11 @@
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 #include <OneWire.h> // Inclusion de la librairie OneWire
-#include <Wire.h> 
+#include <Wire.h>
 
+//Capteur de température
 #define DS18B20 0x28     // Adresse 1-Wire du DS18B20
+
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 //wifi
@@ -15,27 +17,27 @@ String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
 int lastSending = -10;
-int sendFrequency = 1;  //en minutes
+#define sendFrequency 1  //en minutes
 
 //Pins
 //int buzzerPin = 4;
 
-int blueLedPin = 18;
-int greenLedPin = 19;
-int redLedPin = 20;
+#define blueLedPin 18
+#define greenLedPin 19
+#define redLedPin 20
 
-int forceModePin = 9;
+#define forceModePin 9
 int forceModePinState = 0;
-int foodModePin = 6;
+#define foodModePin 6
 int foodModePinState = 0;
 boolean feeding = false;     //Pour savoir si la bouffe est en cours de distribution
 long feedingInitTime = 0;
 
 //relais
-int relaiLumiere = 16;      //La lumière                   
-int relaiChauffage = 14;  
-int relaiPompe = 15;                     
-int relaiBulleur = 10 ;                      
+#define relaiLumiere 16      //La lumière                   
+#define relaiChauffage 14 
+#define relaiPompe 15                     
+#define relaiBulleur 10                      
 
 
 int dayTime = 0;
@@ -48,7 +50,7 @@ float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
-int horaireReveil[] = {06,25};
+//int horaireReveil[] = {06,25};
 
 int ledIntensite = 100;  //Valeur de 0 à 255 (0 = fort, 255 = éteint) 
 ///////////////////////////
@@ -76,7 +78,8 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 //Horloge
 RTC_DS1307 RTC; //L'horloge RTC
 
-//Réveil et sons
+//Réveil et sons 
+/*
 int melody[][4] = {{
 	NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
 },{
@@ -102,7 +105,7 @@ int reveilDurations[] = {
 };
 
 int reveilDone = 0;
-
+*/
 ///////////////////////
 //// TEMPERATURE///////
 //////////////////////
@@ -203,27 +206,120 @@ break;
 }
 }
 */
+
+
+/****************************************************************/
+/*                Fonction qui initialise l'ESP8266             */
+/****************************************************************/
+void initESP8266()
+{  
+  Serial.println("Restarting WiFi !");
+  lcd.setCursor(0,3);
+  lcd.print("ESP8266 Module init");
+  Serial.print("ESP8266 Module init");
+  Serial1.println("AT+RST");
+  delay(2000);
+  Serial1.println("AT+CWMODE=1");
+  lcd.setCursor(0,3);
+  lcd.print("Looking for WiFi...");
+  Serial.print("Looking for WiFi...");
+    delay(2000);
+
+  Serial1.println("AT+RST");
+  delay(2000);
+  //connect to wifi network
+  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+  lcd.clear();
+}
+
+/******************************************/
+/*ENVOYER A THINGSPEAK*********************/
+/******************************************/
+
+void SendToWifi(String tenmpF){
+
+  Serial.println("Sending data to thingsPeak");
+  String cmd = "AT+CIPSTART=\"TCP\",\"";
+  cmd += IP;
+  cmd += "\",80";
+  Serial.println(cmd);
+  Serial1.println(cmd);
+  delay(2000);
+  if(Serial1.find("ERROR")){
+    Serial.println("Échec de l'envoi");
+    initESP8266();
+    lcd.setCursor(17,3);
+    lcd.print("404");
+    return;
+  }
+  Serial.println("Just sent " + cmd);
+  cmd = GET;
+  cmd += tenmpF;
+  cmd += "\r\n";
+  Serial1.print("AT+CIPSEND=");
+  Serial1.println(cmd.length());
+  if(Serial1.find(">")){
+    Serial1.println(cmd);
+    Serial.println("Just sent " + cmd);
+        lcd.setCursor(17,3);
+    lcd.print(" On");
+  }else{
+    Serial1.println("AT+CIPCLOSE");
+    Serial.println("RATÉ");
+        lcd.setCursor(0,3);
+    lcd.print("                    ");
+    initESP8266();
+    lcd.setCursor(17,3);
+    lcd.print("Off");
+  }
+}
+
+void RestartESP8266()
+{
+  Serial.println("Restarting WiFi !");
+  lcd.setCursor(0,3);
+  lcd.print("ESP8266 Module init");
+  Serial1.println("AT+RST");
+  delay(2000);
+  lcd.clear();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////SETUP////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
 
-  Serial.begin(115200);
-  Serial1.begin(115200);
-  
   //Display init
   lcd.init(); 
   lcd.backlight();
-  lcd.setCursor(5, 0);  // (Colonne,ligne)
-  Serial.println("Displaying introduction...");
-  lcd.print("AUTOFISH");
-  lcd.setCursor(4, 1);
-  lcd.print("says Hello");
+  //lcd.setCursor(5, 0);  // (Colonne,ligne)
+  //Serial.println("Displaying introduction...");
+  //lcd.print("AUTOFISH");
+  //lcd.setCursor(4, 1);
+  //lcd.print("says Hello");
   //PlayMusic(1);
   Serial.println("End of introduction...");
   
+  Serial.begin(115200);
+  Serial1.begin(115200);
+  
   //wifi
-  //initESP8266();
+  initESP8266();
+  SendToWifi("206");
   
   //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -231,23 +327,35 @@ void setup() {
   pinMode(redLedPin, OUTPUT);
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
-  pinMode(relaiLumiere,OUTPUT);
-    delay(500);
+
   pinMode(relaiChauffage,OUTPUT);
-  delay(500);
-  pinMode(relaiBulleur,OUTPUT);
-    delay(500);
-  pinMode(relaiPompe,OUTPUT);
-   delay(500);
+  digitalWrite(relaiChauffage,LOW);
+  delay(50);
   
-  //digitalWrite(buzzerPin,LOW);
- digitalWrite(relaiPompe,HIGH);
- digitalWrite(relaiLumiere, HIGH);
+  pinMode(relaiBulleur,INPUT);
+  delay(50);
 
-
+  pinMode(relaiLumiere,OUTPUT);
+  digitalWrite(relaiLumiere, HIGH);
+  delay(50);
+    
+  pinMode(relaiPompe,OUTPUT);
+  digitalWrite(relaiPompe,HIGH);
+ 
   analogWrite(redLedPin,255);
   analogWrite(blueLedPin,255);
   analogWrite(greenLedPin,255);
+
+  //Display init
+  //lcd.init(); 
+  //lcd.backlight();
+  //lcd.setCursor(5, 0);  // (Colonne,ligne)
+  //Serial.println("Displaying introduction...");
+  //lcd.print("AUTOFISH");
+  //lcd.setCursor(4, 1);
+  //lcd.print("says Hello");
+  //PlayMusic(1);
+  Serial.println("End of introduction...");
 
   RTC.begin();
   //RTC.adjust(DateTime(__DATE__, __TIME__));
@@ -465,7 +573,8 @@ if(forceModePinState == HIGH && ForceMode)
 
 if(!ForceMode)
 {
-	int hour = now.hour();
+  int hour = 0;
+	hour = now.hour();
 	if((hour >= morningTime && hour < eveningTime) && !dayTime)
 	{
 		dayTime = 1;
@@ -560,71 +669,3 @@ lcd.print(100*(GoodTempCounter/(GoodTempCounter + BadTempCounter)),0);
 lcd.print("%");
 delay(500);
 }
-
-/****************************************************************/
-/*                Fonction qui initialise l'ESP8266             */
-/****************************************************************/
-void initESP8266()
-{  
-  Serial.println("Restarting WiFi !");
-  lcd.setCursor(0,3);
-  lcd.print("ESP8266 Module init");
-  Serial1.println("AT+RST");
-  delay(2000);
-  Serial1.println("AT+CWMODE=1");
-  lcd.setCursor(0,3);
-  lcd.print("Looking for WiFi...");
-  delay(5000);
-  //connect to wifi network
-  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  lcd.setCursor(0,3);
-  lcd.print("                    ");
-  lcd.setCursor(0,3);
-  lcd.print(NomduReseauWifi);
-  delay(10000);
-
-  lcd.clear();
-}
-
-/******************************************/
-/*ENVOYER A THINGSPEAK*********************/
-/******************************************/
-
-void SendToWifi(String tenmpF){
-
-  Serial.println("Sending data to thingsPeak");
-  String cmd = "AT+CIPSTART=\"TCP\",\"";
-  cmd += IP;
-  cmd += "\",80";
-  Serial.println(cmd);
-  Serial1.println(cmd);
-  delay(2000);
-  if(Serial1.find("ERROR")){
-    Serial.println("Échec de l'envoi");
-    delay(5000);
-    //initESP8266();
-    return;
-  }
-  Serial.println("Just sent " + cmd);
-  cmd = GET;
-  cmd += tenmpF;
-  cmd += "\r\n";
-  Serial1.print("AT+CIPSEND=");
-  Serial1.println(cmd.length());
-  if(Serial1.find(">")){
-    Serial1.println(cmd);
-    Serial.println("Just sent " + cmd);
-  }else{
-    Serial1.println("AT+CIPCLOSE");
-    Serial.println("RATÉ");
-        lcd.setCursor(0,3);
-    lcd.print("                    ");
-            lcd.setCursor(0,3);
-    lcd.print("No connection");
-    //initESP8266();
-  }
-}
-
-
-
-
