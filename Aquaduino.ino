@@ -12,10 +12,15 @@
 //wifi
 char serialbuffer[150];//serial buffer for request url
 <<<<<<< HEAD
+<<<<<<< HEAD
 String NomduReseauWifi = "freebox_manon"; // Garder les guillements
 String NomduReseauWifi2 = "Miaoutch"; // Garder les guillements
 String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
 String MotDePasse2      = "aeddqkmo"; // Garder les guillements
+=======
+String NomduReseauWifi = "wayne"; // Garder les guillements
+String MotDePasse      = "antoinee"; // Garder les guillements
+>>>>>>> parent of 133ac85... Quelques ajustements
 =======
 String NomduReseauWifi = "wayne"; // Garder les guillements
 String MotDePasse      = "antoinee"; // Garder les guillements
@@ -335,7 +340,10 @@ void setup() {
   //wifi
   //initESP8266();
 <<<<<<< HEAD
+<<<<<<< HEAD
   //SendToWifi("206");
+=======
+>>>>>>> parent of 133ac85... Quelques ajustements
 =======
 >>>>>>> parent of 133ac85... Quelques ajustements
   
