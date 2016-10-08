@@ -12,7 +12,9 @@
 //wifi
 char serialbuffer[150];//serial buffer for request url
 String NomduReseauWifi = "freebox_manon"; // Garder les guillements
+String NomduReseauWifi2 = "Miaoutch"; // Garder les guillements
 String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
+String MotDePasse2      = "aeddqkmo"; // Garder les guillements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
@@ -41,6 +43,7 @@ long feedingInitTime = 0;
 
 
 int dayTime = 0;
+boolean lights = false;
 
 ////////////////////////////
 ////CARACTÉRISTIQUES////////
@@ -158,11 +161,13 @@ void ChangeLight(boolean lightOn)
 	if(lightOn){
 		digitalWrite(relaiLumiere, LOW);
 		digitalWrite(relaiBulleur, HIGH);
+    lights = true;
 	}
 
 	if(!lightOn){
 		digitalWrite(relaiLumiere, HIGH);
 		digitalWrite(relaiBulleur, LOW);
+    lights = false;
 	}
 }
 
@@ -217,18 +222,23 @@ void initESP8266()
   lcd.setCursor(0,3);
   lcd.print("ESP8266 Module init");
   Serial.print("ESP8266 Module init");
+  //Serial1.println("AT");
+  //delay(2000);
+  //  while (Serial1.available() > 0) {
+  //  Serial.write(Serial1.read());
+  //}
   Serial1.println("AT+RST");
   delay(2000);
   Serial1.println("AT+CWMODE=1");
   lcd.setCursor(0,3);
   lcd.print("Looking for WiFi...");
   Serial.print("Looking for WiFi...");
-    delay(2000);
-
-  Serial1.println("AT+RST");
-  delay(2000);
+    delay(3000);
+  //Serial1.println("AT+RST");
+  //delay(2000);
   //connect to wifi network
   Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+  delay(5000);
   lcd.clear();
 }
 
@@ -247,7 +257,7 @@ void SendToWifi(String tenmpF){
   delay(2000);
   if(Serial1.find("ERROR")){
     Serial.println("Échec de l'envoi");
-    initESP8266();
+    //initESP8266();
     lcd.setCursor(17,3);
     lcd.print("404");
     return;
@@ -268,7 +278,7 @@ void SendToWifi(String tenmpF){
     Serial.println("RATÉ");
         lcd.setCursor(0,3);
     lcd.print("                    ");
-    initESP8266();
+    //initESP8266();
     lcd.setCursor(17,3);
     lcd.print("Off");
   }
@@ -306,20 +316,20 @@ void setup() {
   //Display init
   lcd.init(); 
   lcd.backlight();
-  //lcd.setCursor(5, 0);  // (Colonne,ligne)
-  //Serial.println("Displaying introduction...");
-  //lcd.print("AUTOFISH");
-  //lcd.setCursor(4, 1);
-  //lcd.print("says Hello");
+  lcd.setCursor(5, 0);  // (Colonne,ligne)
+  Serial.println("Displaying introduction...");
+  lcd.print("AUTOFISH");
+  lcd.setCursor(4, 1);
+  lcd.print("says Hello");
   //PlayMusic(1);
   Serial.println("End of introduction...");
-  
+  delay(2000);
   Serial.begin(115200);
   Serial1.begin(115200);
   
   //wifi
-  initESP8266();
-  SendToWifi("206");
+  //initESP8266();
+  //SendToWifi("206");
   
   //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -339,8 +349,8 @@ void setup() {
   digitalWrite(relaiLumiere, HIGH);
   delay(50);
     
-  pinMode(relaiPompe,OUTPUT);
-  digitalWrite(relaiPompe,HIGH);
+  //pinMode(relaiPompe,OUTPUT);
+  //digitalWrite(relaiPompe,HIGH);
  
   analogWrite(redLedPin,255);
   analogWrite(blueLedPin,255);
@@ -358,7 +368,7 @@ void setup() {
   Serial.println("End of introduction...");
 
   RTC.begin();
-  //RTC.adjust(DateTime(__DATE__, __TIME__));
+  RTC.adjust(DateTime(__DATE__, __TIME__));
   DateTime initNow = RTC.now();
   thisMonth = initNow.month();
   //thisMonth = initNow.month();
@@ -369,8 +379,8 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
-//	if (! RTC.isrunning()) 
-//	Serial.println("RTC is NOT running!");
+	if (! RTC.isrunning()) 
+	Serial.println("RTC is NOT running!");
 
 ////////////////////////////
 //////WIFI HAS SOMETHING TO SAY?
@@ -381,7 +391,7 @@ void loop()
     Serial.write(Serial1.read());
   }
   
-  if (Serial.available() > 0) {
+  if (Serial1.available() > 0) {
      //read from serial until terminating character
      int len = Serial.readBytesUntil('\n', serialbuffer, sizeof(serialbuffer));
   
@@ -400,6 +410,7 @@ DateTime now = RTC.now();
 
 //SendToWifi
 int minutes = now.minute();
+Serial.print(minutes);
 //Serial.println("Do i send to wifi ? last time was at " + (String)lastSending + ", this is " + (String)minutes);
     if((minutes - lastSending) >= sendFrequency){
       Serial.println("Sending to Wifi");
@@ -432,37 +443,44 @@ reveilDone = 0;
 ///////////////////////
 //// ----FOOD---///////
 ///////////////////////
+//foodModePinState = digitalRead(foodModePin);
+//
+//if(!feeding && foodModePinState == LOW)
+//{
+//	feeding = true;
+//	feedingInitTime = now.minute();
+//	digitalWrite(relaiPompe,LOW);
+// Serial.println("Time for feeding !");
+//}
+//
+//if(feeding)
+//{
+//	if(feedingInitTime < 55)
+//	{ 
+//		if(now.minute() >= feedingInitTime+5)
+//		{
+//			feeding = false;
+//			digitalWrite(relaiPompe,HIGH);
+//		}
+//	}
+//
+//	if(feedingInitTime >=55)
+//	{ 
+//		if(now.minute()+60 >= feedingInitTime+5)
+//		{
+//			feeding = false;
+//			digitalWrite(relaiPompe,HIGH);
+//		}
+//	}
+//
+//}
+//ForceMode2
 foodModePinState = digitalRead(foodModePin);
-
-if(!feeding && foodModePinState == LOW)
+if(foodModePinState == LOW)
 {
-	feeding = true;
-	feedingInitTime = now.minute();
-	digitalWrite(relaiPompe,LOW);
- Serial.println("Time for feeding !");
+  ChangeLight(!lights);
 }
 
-if(feeding)
-{
-	if(feedingInitTime < 55)
-	{ 
-		if(now.minute() >= feedingInitTime+5)
-		{
-			feeding = false;
-			digitalWrite(relaiPompe,HIGH);
-		}
-	}
-
-	if(feedingInitTime >=55)
-	{ 
-		if(now.minute()+60 >= feedingInitTime+5)
-		{
-			feeding = false;
-			digitalWrite(relaiPompe,HIGH);
-		}
-	}
-
-}
 
 
 /////////////////////////////
