@@ -11,10 +11,15 @@
 
 //wifi
 char serialbuffer[150];//serial buffer for request url
+<<<<<<< HEAD
 String NomduReseauWifi = "freebox_manon"; // Garder les guillements
 String NomduReseauWifi2 = "Miaoutch"; // Garder les guillements
 String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
 String MotDePasse2      = "aeddqkmo"; // Garder les guillements
+=======
+String NomduReseauWifi = "wayne"; // Garder les guillements
+String MotDePasse      = "antoinee"; // Garder les guillements
+>>>>>>> parent of 133ac85... Quelques ajustements
 String ApiKey          = "YCBS447TES9C1OTU";
 #define IP "184.106.153.149" // thingspeak.com
 String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
@@ -329,7 +334,10 @@ void setup() {
   
   //wifi
   //initESP8266();
+<<<<<<< HEAD
   //SendToWifi("206");
+=======
+>>>>>>> parent of 133ac85... Quelques ajustements
   
   //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
@@ -416,7 +424,7 @@ Serial.print(minutes);
       Serial.println("Sending to Wifi");
     SendToWifi(String(lastTemp));
     lastSending = minutes;
-    if (lastSending >= 59)
+    if (lastSending == 59)
     lastSending = -1;
     
     }
@@ -559,7 +567,7 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	digitalWrite(relaiChauffage,HIGH);
     	heatMode = 1;
     } 
-    if(temp !=0 && temp >= targetTemp + deltaTemp)
+    else if(temp !=0 && temp >= targetTemp + deltaTemp)
     {
     	digitalWrite(relaiChauffage,LOW);
     	heatMode = 0;                                         
@@ -687,3 +695,63 @@ lcd.print(100*(GoodTempCounter/(GoodTempCounter + BadTempCounter)),0);
 lcd.print("%");
 delay(500);
 }
+<<<<<<< HEAD
+=======
+
+/****************************************************************/
+/*                Fonction qui initialise l'ESP8266             */
+/****************************************************************/
+void initESP8266()
+{  
+  Serial.println("Restarting WiFi !");
+  lcd.setCursor(0,3);
+  lcd.print("ESP8266 Module init");
+  Serial1.println("AT+RST");
+  delay(500);
+  Serial1.println("AT+CWMODE=1");
+  lcd.setCursor(0,3);
+  lcd.print("Looking for WiFi...");
+  delay(500);
+  
+  //Serial1.println("AT+RST");
+  //connect to wifi network
+  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+  delay(2000);
+
+  lcd.clear();
+}
+
+/******************************************/
+/*ENVOYER A THINGSPEAK*********************/
+/******************************************/
+
+void SendToWifi(String tenmpF){
+
+  Serial.println("Sending data to thingsPeak");
+  String cmd = "AT+CIPSTART=\"TCP\",\"";
+  cmd += IP;
+  cmd += "\",80";
+  Serial.println(cmd);
+  Serial1.println(cmd);
+  delay(2000);
+  if(Serial1.find("ERROR")){
+    Serial.println("Échec de l'envoi");
+    initESP8266();
+    return;
+  }
+  Serial.println("Just sent " + cmd);
+  cmd = GET;
+  cmd += tenmpF;
+  cmd += "\r\n";
+  Serial1.print("AT+CIPSEND=");
+  Serial1.println(cmd.length());
+  if(Serial1.find(">")){
+    Serial1.println(cmd);
+    Serial.println("Just sent " + cmd);
+  }else{
+    Serial1.println("AT+CIPCLOSE");
+    Serial.println("RATÉ");
+    //initESP8266();
+  }
+}
+
