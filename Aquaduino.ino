@@ -10,33 +10,24 @@
 #define BROCHE_ONEWIRE 7 // Broche utilisée pour le bus 1-Wire
 
 //wifi
-char serialbuffer[150];//serial buffer for request url
-<<<<<<< HEAD
-<<<<<<< HEAD
-String NomduReseauWifi = "freebox_manon"; // Garder les guillements
-String NomduReseauWifi2 = "Miaoutch"; // Garder les guillements
-String MotDePasse      = "AB5ADE27D8"; // Garder les guillements
-String MotDePasse2      = "aeddqkmo"; // Garder les guillements
-=======
-String NomduReseauWifi = "wayne"; // Garder les guillements
-String MotDePasse      = "antoinee"; // Garder les guillements
->>>>>>> parent of 133ac85... Quelques ajustements
-=======
-String NomduReseauWifi = "wayne"; // Garder les guillements
-String MotDePasse      = "antoinee"; // Garder les guillements
->>>>>>> parent of 133ac85... Quelques ajustements
-String ApiKey          = "YCBS447TES9C1OTU";
-#define IP "184.106.153.149" // thingspeak.com
-String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
-int lastSending = -10;
-#define sendFrequency 1  //en minutes
+//char serialbuffer[150];//serial buffer for request url
+//String NomduReseauWifi2 = "freebox_manon"; // Garder les guillements
+//String NomduReseauWifi = "NSAisWatchingYou"; // Garder les guillements
+//String MotDePasse2      = "AB5ADE27D8"; // Garder les guillements
+//String MotDePasse      = "epthfmlKsKih!"; // Garder les guillements
+//int wifiRestartCounter = 0;
+//String ApiKey          = "YCBS447TES9C1OTU";
+//#define IP "184.106.153.149" // thingspeak.com
+//String GET = "GET /update?key=YCBS447TES9C1OTU&field1=";
+//int lastSending = -10;
+//#define sendFrequency 1  //en minutes
 
 //Pins
 //int buzzerPin = 4;
 
-#define blueLedPin 18
+#define blueLedPin 20
 #define greenLedPin 19
-#define redLedPin 20
+#define redLedPin 18
 
 #define forceModePin 9
 int forceModePinState = 0;
@@ -46,26 +37,30 @@ boolean feeding = false;     //Pour savoir si la bouffe est en cours de distribu
 long feedingInitTime = 0;
 
 //relais
-#define relaiLumiere 16      //La lumière                   
-#define relaiChauffage 14 
+#define relaiLumiere 14      //La lumière                   
+#define relaiChauffage 16 
 #define relaiPompe 15                     
 #define relaiBulleur 10                      
 
-
+DateTime now; 
 int dayTime = 0;
 boolean lights = false;
+int hour =0;
 
 ////////////////////////////
 ////CARACTÉRISTIQUES////////
 int morningTime = 11; //inclus
 int eveningTime = 20;   //inclus
+float temp=0;
 float targetTemp = 25;
 float deltaTemp = 0.25f;
 float deltaAlert = 0.75f;
 
 //int horaireReveil[] = {06,25};
 
-int ledIntensite = 100;  //Valeur de 0 à 255 (0 = fort, 255 = éteint) 
+int ledIntensite = 255;  //Valeur de 0 à 255 (0 = fort, 255 = éteint)
+int greenLedisOn, redLedisOn, blueLedisOn = 0; 
+
 ///////////////////////////
 ///////////////////////////
 
@@ -91,34 +86,6 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 //Horloge
 RTC_DS1307 RTC; //L'horloge RTC
 
-//Réveil et sons 
-/*
-int melody[][4] = {{
-	NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5
-},{
-  NOTE_C5, NOTE_G4, NOTE_E4, NOTE_C4
-}};
-
-int reveil[] = {
-	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
-	NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_A4,
-	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_D4,
-	NOTE_G4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_D5, NOTE_G4,
-};
-int noteDurations[][4] = {{
-	8, 16, 16, 4
-},{
-  8, 16, 16, 4
-}};
-int reveilDurations[] = {
-	12,12,12,12,6,6,12,12,12,12,6,6,
-	12,12,12,12,12,12,6,12,12,12,12,12,12,6,
-	12,12,12,12,6,6,12,12,12,12,6,6,
-	12,12,12,12,6,12,12,12,12,12,12,6,6, 1.5
-};
-
-int reveilDone = 0;
-*/
 ///////////////////////
 //// TEMPERATURE///////
 //////////////////////
@@ -147,7 +114,7 @@ boolean getTemperature(float *temp)
   ds.select(addr);        // On sélectionne le DS18B20
 
   ds.write(0x44, 1);      // On lance une prise de mesure de température
-  delay(800);             // Et on attend la fin de la mesure
+  delay(1000);             // Et on attend la fin de la mesure
 
   ds.reset();             // On reset le bus 1-Wire
   ds.select(addr);        // On sélectionne le DS18B20
@@ -170,151 +137,25 @@ void ChangeLight(boolean lightOn)
 {
 	if(lightOn){
 		digitalWrite(relaiLumiere, LOW);
-		digitalWrite(relaiBulleur, HIGH);
     lights = true;
 	}
 
 	if(!lightOn){
 		digitalWrite(relaiLumiere, HIGH);
-		digitalWrite(relaiBulleur, LOW);
     lights = false;
 	}
 }
 
-////////////////////
-/////////MUSIC//////
-////////////////////
-/*void PlayMusic(int musicNumber, int index){
-	switch (musicNumber) {
-		case 1 :
-		for (int thisNote = 0; thisNote<4 ; thisNote++) {
-
-    // to calculate the note duration, take one second
-    // divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 2000 / noteDurations[index][thisNote];
-    tone(buzzerPin, melody[index][thisNote], noteDuration);
-
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noTone(buzzerPin);
+void SwitchLeds(int blue, int green, int red)
+{   
+      blueLedisOn = blue;
+      greenLedisOn = green;
+      redLedisOn = red;
+      
+      digitalWrite(redLedPin, 1-red);
+      digitalWrite(greenLedPin, 1-green);
+      digitalWrite(blueLedPin, 1-blue);
 }
-break;
-case 2:
-for (int thisNote = 0; thisNote < 52; thisNote++) {
-
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int reveilDuration = 2000 / reveilDurations[thisNote];
-    tone(buzzerPin, reveil[thisNote], reveilDuration);
-
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = reveilDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noTone(buzzerPin);
-}
-break;
-}
-}
-*/
-
-
-/****************************************************************/
-/*                Fonction qui initialise l'ESP8266             */
-/****************************************************************/
-void initESP8266()
-{  
-  Serial.println("Restarting WiFi !");
-  lcd.setCursor(0,3);
-  lcd.print("ESP8266 Module init");
-  Serial.print("ESP8266 Module init");
-  //Serial1.println("AT");
-  //delay(2000);
-  //  while (Serial1.available() > 0) {
-  //  Serial.write(Serial1.read());
-  //}
-  Serial1.println("AT+RST");
-  delay(2000);
-  Serial1.println("AT+CWMODE=1");
-  lcd.setCursor(0,3);
-  lcd.print("Looking for WiFi...");
-  Serial.print("Looking for WiFi...");
-    delay(3000);
-  //Serial1.println("AT+RST");
-  //delay(2000);
-  //connect to wifi network
-  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  delay(5000);
-  lcd.clear();
-}
-
-/******************************************/
-/*ENVOYER A THINGSPEAK*********************/
-/******************************************/
-
-void SendToWifi(String tenmpF){
-
-  Serial.println("Sending data to thingsPeak");
-  String cmd = "AT+CIPSTART=\"TCP\",\"";
-  cmd += IP;
-  cmd += "\",80";
-  Serial.println(cmd);
-  Serial1.println(cmd);
-  delay(2000);
-  if(Serial1.find("ERROR")){
-    Serial.println("Échec de l'envoi");
-    //initESP8266();
-    lcd.setCursor(17,3);
-    lcd.print("404");
-    return;
-  }
-  Serial.println("Just sent " + cmd);
-  cmd = GET;
-  cmd += tenmpF;
-  cmd += "\r\n";
-  Serial1.print("AT+CIPSEND=");
-  Serial1.println(cmd.length());
-  if(Serial1.find(">")){
-    Serial1.println(cmd);
-    Serial.println("Just sent " + cmd);
-        lcd.setCursor(17,3);
-    lcd.print(" On");
-  }else{
-    Serial1.println("AT+CIPCLOSE");
-    Serial.println("RATÉ");
-        lcd.setCursor(0,3);
-    lcd.print("                    ");
-    //initESP8266();
-    lcd.setCursor(17,3);
-    lcd.print("Off");
-  }
-}
-
-void RestartESP8266()
-{
-  Serial.println("Restarting WiFi !");
-  lcd.setCursor(0,3);
-  lcd.print("ESP8266 Module init");
-  Serial1.println("AT+RST");
-  delay(2000);
-  lcd.clear();
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -323,54 +164,47 @@ void RestartESP8266()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
 
+ 
   //Display init
   lcd.init(); 
   lcd.backlight();
   lcd.setCursor(5, 0);  // (Colonne,ligne)
-  Serial.println("Displaying introduction...");
   lcd.print("AUTOFISH");
   lcd.setCursor(4, 1);
   lcd.print("says Hello");
   //PlayMusic(1);
   Serial.println("End of introduction...");
-  delay(2000);
-  Serial.begin(115200);
-  Serial1.begin(115200);
-  
+  //delay(2000);
+  Serial.begin(9600);
+  //Serial1.begin(115200);
+    Serial.println("Displaying introduction...");
+
   //wifi
   //initESP8266();
-<<<<<<< HEAD
-<<<<<<< HEAD
+
   //SendToWifi("206");
-=======
->>>>>>> parent of 133ac85... Quelques ajustements
-=======
->>>>>>> parent of 133ac85... Quelques ajustements
+
   
-  //pinMode(buzzerPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
   pinMode(redLedPin, OUTPUT);
+  digitalWrite(redLedPin, HIGH);
+  digitalWrite(greenLedPin, HIGH);
+  digitalWrite(blueLedPin, HIGH);
   pinMode(forceModePin, INPUT_PULLUP);
   pinMode(foodModePin, INPUT_PULLUP);
 
   pinMode(relaiChauffage,OUTPUT);
   digitalWrite(relaiChauffage,LOW);
   delay(50);
-  
-  pinMode(relaiBulleur,INPUT);
-  delay(50);
 
   pinMode(relaiLumiere,OUTPUT);
   digitalWrite(relaiLumiere, HIGH);
   delay(50);
-    
-  //pinMode(relaiPompe,OUTPUT);
-  //digitalWrite(relaiPompe,HIGH);
  
-  analogWrite(redLedPin,255);
-  analogWrite(blueLedPin,255);
-  analogWrite(greenLedPin,255);
+  //analogWrite(redLedPin,255);
+  //analogWrite(blueLedPin,255);
+  //analogWrite(greenLedPin,255);
 
   //Display init
   //lcd.init(); 
@@ -382,9 +216,9 @@ void setup() {
   //lcd.print("says Hello");
   //PlayMusic(1);
   Serial.println("End of introduction...");
-
+  //SwitchLeds(0,0,1);
   RTC.begin();
-  RTC.adjust(DateTime(__DATE__, __TIME__));
+  //RTC.adjust(DateTime(__DATE__, __TIME__));
   DateTime initNow = RTC.now();
   thisMonth = initNow.month();
   //thisMonth = initNow.month();
@@ -395,180 +229,98 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() 
 {
+  
 	if (! RTC.isrunning()) 
 	Serial.println("RTC is NOT running!");
-
 ////////////////////////////
 //////WIFI HAS SOMETHING TO SAY?
 ////////////////////////////
 
+
+
+
 //output everything from ESP8266 to the Arduino Micro Serial output
-  while (Serial1.available() > 0) {
-    Serial.write(Serial1.read());
-  }
+  //while (Serial1.available() > 0) {
+  //  Serial.write(Serial1.read());
+  //}
   
-  if (Serial1.available() > 0) {
-     //read from serial until terminating character
-     int len = Serial.readBytesUntil('\n', serialbuffer, sizeof(serialbuffer));
+  //if (Serial1.available() > 0) {
+  //   //read from serial until terminating character
+  //  int len = Serial.readBytesUntil('\n', serialbuffer, sizeof(serialbuffer));
   
      //trim buffer to length of the actual message
-     String message = String(serialbuffer).substring(0,len-1);
-     Serial.println("message: " + message);
+  //   String message = String(serialbuffer).substring(0,len-1);
+  //  Serial.println("message: " + message);
 
-  }//output everything from ESP8266 to the Arduino Micro Serial output
-  while (Serial1.available() > 0) {
-    Serial.write(Serial1.read());
-  }
+  //}//output everything from ESP8266 to the Arduino Micro Serial output
+  //while (Serial1.available() > 0) {
+  //  Serial.write(Serial1.read());
+  //}
 
 
 ///La date qui sert partout
-DateTime now = RTC.now();
+now = RTC.now();
 
-//SendToWifi
-int minutes = now.minute();
-Serial.print(minutes);
-//Serial.println("Do i send to wifi ? last time was at " + (String)lastSending + ", this is " + (String)minutes);
-    if((minutes - lastSending) >= sendFrequency){
-      Serial.println("Sending to Wifi");
-    SendToWifi(String(lastTemp));
-    lastSending = minutes;
-    if (lastSending == 59)
-    lastSending = -1;
-    
-    }
-////////////////////////
-//// ----Réveil---///////
-////////////////////////
-/*
-if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1] && reveilDone == 0){
-	int c = (14 - now.month())/12;
-  int a = now.year() - c;
-  int m = now.month() + 12*c - 2;
-
-  int j = (now.day() + a + a/4 - a/100 + a/400 + (31*m)/12)%7;
-
-  if(c !=0 && c != 6)
-	PlayMusic(2,0);
-	reveilDone = 1;
-}
-if(now.hour() == horaireReveil[0] && now.minute() == horaireReveil[1]+2)
-reveilDone = 0;
-
-*/
-//Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year()); 
-///////////////////////
-//// ----FOOD---///////
-///////////////////////
-//foodModePinState = digitalRead(foodModePin);
-//
-//if(!feeding && foodModePinState == LOW)
-//{
-//	feeding = true;
-//	feedingInitTime = now.minute();
-//	digitalWrite(relaiPompe,LOW);
-// Serial.println("Time for feeding !");
-//}
-//
-//if(feeding)
-//{
-//	if(feedingInitTime < 55)
-//	{ 
-//		if(now.minute() >= feedingInitTime+5)
-//		{
-//			feeding = false;
-//			digitalWrite(relaiPompe,HIGH);
-//		}
-//	}
-//
-//	if(feedingInitTime >=55)
-//	{ 
-//		if(now.minute()+60 >= feedingInitTime+5)
-//		{
-//			feeding = false;
-//			digitalWrite(relaiPompe,HIGH);
-//		}
-//	}
-//
-//}
-//ForceMode2
+//PUSHBUTTON
 foodModePinState = digitalRead(foodModePin);
 if(foodModePinState == LOW)
 {
   ChangeLight(!lights);
+  Serial.print("Forcing the lights to change !");
+  delay(1000);
 }
-
-
 
 /////////////////////////////
 /////////RESET Mean date %////////
 /////////EVERY MONTH////////
 /////////////////////////////
 
-if(now.month() == thisMonth + 1 || now.month() - thisMonth > 9)
-//if(now.month() == thisMonth + 1)
-{
-	thisMonth = now.month() ;
-	GoodTempCounter = 0;
-	BadTempCounter = 0;
-}
+//if(now.month() == thisMonth + 1 || now.month() - thisMonth > 9)
+////if(now.month() == thisMonth + 1)
+//{
+//	thisMonth = now.month() ;
+//	GoodTempCounter = 0;
+//	BadTempCounter = 0;
+//}
 
 
 ///////////////////////
 //// TEMPERATURE///////
 ///////////////////////
-float temp;
-
+temp = 0;
+SwitchLeds(0,0,0);
 if(getTemperature(&temp)) {	    // Affiche la température  // Lit la température ambiante à ~1Hz
 	
 	lastTemp = temp;
 	Serial.print("Temperature : ");
 	Serial.print(temp);
-  Serial.println(" degrés");
-
-    if(!alertTemp && temp != 0 && ((temp > targetTemp + deltaAlert) || (temp < targetTemp - deltaAlert)))
-    {
-    	//if(!mute)
-    	//digitalWrite(buzzerPin, HIGH);
-    	analogWrite(redLedPin, ledIntensite);
-    	analogWrite(blueLedPin, 255);
-    	alertTemp = true;
-    	Serial.print("ALERT ");
-    	Serial.println(temp);
-    }
-    if (alertTemp && temp != 0 && temp < (targetTemp + deltaAlert) && temp > (targetTemp - deltaAlert))
-    {
-    	//digitalWrite(buzzerPin, LOW);
-    	analogWrite(redLedPin,255);
-    	alertTemp = false;
-    	Serial.println("ALERT IS OVER");
+  Serial.print(" degrés");
+  //Serial.print(", heatmode =");
+  //Serial.println(heatMode);
+  //Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year() +", " + (String)now.hour() + "h " + (String)now.minute() + "min " + (String)now.hour() + " sec"); 
+    
+    ////LED
+    if(temp !=0){
+    if(temp > targetTemp + deltaAlert){
+      if (redLedisOn == 0)
+          SwitchLeds(0,0,1);
+          Serial.println("Temp is pretty hot");
     }
 
-
-    if(temp != 0 && ((temp < targetTemp - deltaTemp) || (temp > targetTemp + deltaTemp)))
-    {
-    	//Serial.println("BAD TEMPERATURE");
-    	BadTempCounter ++;
-    	if(!alertTemp)
-    	{
-    		analogWrite(blueLedPin, ledIntensite);
-    		analogWrite(greenLedPin, 255);
-    		analogWrite(redLedPin,255);
-    	}
-    	if(alertTemp)
-    	BadTempCounter++;
+    else if (temp < targetTemp - deltaAlert){
+        if(blueLedisOn == 0)
+          SwitchLeds(1,0,0);
+                    Serial.println("Temp is pretty cold");
     }
 
-    else
-    {
-    	Serial.println("GOOD TEMPERATURE");
-    	GoodTempCounter++;
-    	analogWrite(blueLedPin, 255);
-    	analogWrite(greenLedPin, ledIntensite);
-    	analogWrite(redLedPin,255);
+    //if (temp <= (targetTemp + deltaAlert)  && temp >= (targetTemp - deltaAlert))
+    else{
+        if (greenLedisOn == 0)
+          SwitchLeds(0,1,0);
+                    Serial.println("Temp is pretty good");
     }
-
-
-
+    }
+    // RELAI
     //Finalement on gère le relai
     if(temp !=0 && temp <= targetTemp - deltaTemp)
     {
@@ -580,56 +332,32 @@ if(getTemperature(&temp)) {	    // Affiche la température  // Lit la températu
     	digitalWrite(relaiChauffage,LOW);
     	heatMode = 0;                                         
     } 
+    delay(1000);
 }
+  //Serial.println((String)now.day()+"/" + (String)now.month()+"/" + (String)now.year() +", " + (String)now.hour() + "h " + (String)now.minute() + "min " + (String)now.hour() + " sec"); 
 
 ///////////////////////
 ///////// LIGHT///////
 //////////////////////
-
-//////FORCEMODE//////
-forceModePinState = digitalRead(forceModePin);
-//Serial.println(forceModePinState);
-
-if(forceModePinState == LOW && !ForceMode)
-{
-	ForceMode = true;
-	Serial.println("Enable Forced Mode");
-	//if(!dayTime)
-	//ChangeLight(dayTime);      
-}
-
-if(forceModePinState == HIGH && ForceMode)
-{
-	ForceMode = false;
-	Serial.println("Disable Forced Mode");
-}
 ///////////////////////
-
-if(!ForceMode)
-{
-  int hour = 0;
+  hour = 0;
 	hour = now.hour();
 	if((hour >= morningTime && hour < eveningTime) && !dayTime)
 	{
 		dayTime = 1;
 		ChangeLight(dayTime);
-    //PlayMusic(1,0);
 	}
 	if((hour < morningTime || hour >= eveningTime) && dayTime)
 	{
 		dayTime = 0;
 		ChangeLight(dayTime);
-    //PlayMusic(1,1);
 	} 
-}
 
-else if(ForceMode)
-if(!dayTime)
-{
-	ChangeLight(true); 
-	dayTime = 1;
-}
+  
 
+
+
+/*
 ///////////////////////
 /////////DISPLAY///////
 ///////////////////////
@@ -701,65 +429,92 @@ lcd.print("MODE FORCE  ");
 
 lcd.print(100*(GoodTempCounter/(GoodTempCounter + BadTempCounter)),0);
 lcd.print("%");
-delay(500);
-}
-<<<<<<< HEAD
-=======
 
-/****************************************************************/
-/*                Fonction qui initialise l'ESP8266             */
-/****************************************************************/
-void initESP8266()
-{  
-  Serial.println("Restarting WiFi !");
-  lcd.setCursor(0,3);
-  lcd.print("ESP8266 Module init");
-  Serial1.println("AT+RST");
-  delay(500);
-  Serial1.println("AT+CWMODE=1");
-  lcd.setCursor(0,3);
-  lcd.print("Looking for WiFi...");
-  delay(500);
-  
-  //Serial1.println("AT+RST");
-  //connect to wifi network
-  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
-  delay(2000);
+*/
 
-  lcd.clear();
+
 }
 
-/******************************************/
-/*ENVOYER A THINGSPEAK*********************/
-/******************************************/
 
-void SendToWifi(String tenmpF){
-
-  Serial.println("Sending data to thingsPeak");
-  String cmd = "AT+CIPSTART=\"TCP\",\"";
-  cmd += IP;
-  cmd += "\",80";
-  Serial.println(cmd);
-  Serial1.println(cmd);
-  delay(2000);
-  if(Serial1.find("ERROR")){
-    Serial.println("Échec de l'envoi");
-    initESP8266();
-    return;
-  }
-  Serial.println("Just sent " + cmd);
-  cmd = GET;
-  cmd += tenmpF;
-  cmd += "\r\n";
-  Serial1.print("AT+CIPSEND=");
-  Serial1.println(cmd.length());
-  if(Serial1.find(">")){
-    Serial1.println(cmd);
-    Serial.println("Just sent " + cmd);
-  }else{
-    Serial1.println("AT+CIPCLOSE");
-    Serial.println("RATÉ");
-    //initESP8266();
-  }
-}
+//
+///****************************************************************/
+///*                Fonction qui initialise l'ESP8266             */
+///****************************************************************/
+//void initESP8266()
+//{  
+//  Serial.println("Restarting WiFi !");
+//  lcd.setCursor(0,3);
+//  lcd.print("ESP8266 Module init");
+//  Serial.print("ESP8266 Module init");
+//  //Serial1.println("AT");
+//  //delay(2000);
+//  //  while (Serial1.available() > 0) {
+//  //  Serial.write(Serial1.read());
+//  //}
+//  Serial1.println("AT+RST");
+//  delay(2000);
+//  Serial1.println("AT+CWMODE=1");
+//  lcd.setCursor(0,3);
+//  lcd.print("Looking for WiFi...");
+//  Serial.print("Looking for WiFi...");
+//    delay(3000);
+//  //Serial1.println("AT+RST");
+//  //delay(2000);
+//  //connect to wifi network
+//  Serial1.println("AT+CWJAP=\""+ NomduReseauWifi + "\",\"" + MotDePasse +"\"");
+//  delay(5000);
+//  lcd.clear();
+//}
+//
+///******************************************/
+///*ENVOYER A THINGSPEAK*********************/
+///******************************************/
+//
+//void SendToWifi(String tenmpF){
+//
+//  Serial.println("Sending data to thingsPeak");
+//  String cmd = "AT+CIPSTART=\"TCP\",\"";
+//  cmd += IP;
+//  cmd += "\",80";
+//  Serial.println(cmd);
+//  Serial1.println(cmd);
+//  delay(2000);
+//  if(Serial1.find("ERROR")){
+//    Serial.println("Échec de l'envoi");
+//    //RestartESP8266();
+//    lcd.setCursor(17,3);
+//    lcd.print("404");
+//    return;
+//  }
+//  Serial.println("Just sent " + cmd);
+//  cmd = GET;
+//  cmd += tenmpF;
+//  cmd += "\r\n";
+//  Serial1.print("AT+CIPSEND=");
+//  Serial1.println(cmd.length());
+//  if(Serial1.find(">")){
+//    Serial1.println(cmd);
+//    Serial.println("Just sent " + cmd);
+//        lcd.setCursor(17,3);
+//    lcd.print(" On");
+//  }else{
+//    Serial1.println("AT+CIPCLOSE");
+//    Serial.println("RATÉ");
+//        lcd.setCursor(0,3);
+//    lcd.print("                    ");
+//    //RestartESP8266();
+//    lcd.setCursor(17,3);
+//    lcd.print("Off");
+//  }
+//}
+//
+//void RestartESP8266()
+//{
+//  Serial.println("Restarting WiFi !");
+//  lcd.setCursor(0,3);
+//  lcd.print("ESP8266 Module init");
+//  Serial1.println("AT+RST");
+//  delay(2000);
+//  lcd.clear();
+//}
 
